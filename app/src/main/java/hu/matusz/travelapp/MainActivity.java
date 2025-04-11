@@ -1,8 +1,14 @@
 package hu.matusz.travelapp;
 
+import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
+
+    private MapView map;
 
     /**
      * Creates a osm map
@@ -24,17 +32,41 @@ public class MainActivity extends AppCompatActivity {
 
         Context ctx = getApplicationContext();
 
-        // set saving path to internal storage
+        // Setup internal tile cache (no permissions needed)
         File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
-        if (!osmdroidBasePath.exists()) {
-            osmdroidBasePath.mkdirs();
-        }
-
+        if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
         Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);
         Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, "tiles"));
-        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
+        // Load preferences using AndroidX
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
+        Configuration.getInstance().load(ctx, prefs);
+
+        // Set layout
         setContentView(R.layout.activity_main);
+
+        // Initialize the MapView
+        MapView map = findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setBuiltInZoomControls(true);
+        map.setMultiTouchControls(true);
+
+        // Center map on Eiffel Tower
+        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
+        IMapController mapController = map.getController();
+        mapController.setZoom(19);
+        mapController.setCenter(startPoint);
+
+        // Add marker
+        Marker startMarker = new Marker(map);
+        startMarker.setPosition(startPoint);
+        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        startMarker.setTitle("Get doxed lol");
+        map.getOverlays().add(startMarker);
+
+        // Optional: refresh view
+        map.invalidate();
     }
+
 
 }
