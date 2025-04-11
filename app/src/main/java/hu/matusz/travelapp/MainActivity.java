@@ -1,24 +1,40 @@
 package hu.matusz.travelapp;
 
-import android.os.Bundle;
+import org.osmdroid.config.Configuration;
 
-import androidx.activity.EdgeToEdge;
+import android.content.Context;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * Creates a osm map
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
+        Context ctx = getApplicationContext();
+
+        // set saving path to internal storage
+        File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        if (!osmdroidBasePath.exists()) {
+            osmdroidBasePath.mkdirs();
+        }
+
+        Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);
+        Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, "tiles"));
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
+
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
     }
+
 }
