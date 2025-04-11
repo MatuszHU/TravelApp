@@ -13,15 +13,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
-
-    private MapView map;
 
     /**
      * Creates a osm map
