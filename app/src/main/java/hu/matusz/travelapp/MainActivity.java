@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 // Add marker at tapped location
                 Marker marker = new Marker(map);
                 marker.setPosition(p);
-                marker.setAnchor(Marker.ANCHOR_LEFT, Marker.ANCHOR_BOTTOM);
+                marker.setAnchor(0.05f, 0.95f);
                 marker.setTitle("Dropped Pin");
 
                 // Optional: use your custom icon
