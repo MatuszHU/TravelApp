@@ -5,24 +5,26 @@ import org.osmdroid.config.Configuration;
 import android.content.Context;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * Creates a osm map
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Context ctx = getApplicationContext();
 
-        // Speicherpfad auf internen Speicher setzen
+        // set saving path to internal storage
         File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
         if (!osmdroidBasePath.exists()) {
             osmdroidBasePath.mkdirs();
