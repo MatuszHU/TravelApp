@@ -2,16 +2,20 @@ package hu.matusz.travelapp;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 
@@ -51,7 +55,37 @@ public class MainActivity extends AppCompatActivity {
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
-        // Center map on Eiffel Tower
+        // Add event listener to detect map taps
+        map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
+            @Override
+            public boolean singleTapConfirmedHelper(GeoPoint p) {
+                // Add marker at tapped location
+                Marker marker = new Marker(map);
+                marker.setPosition(p);
+                marker.setAnchor(Marker.ANCHOR_LEFT, Marker.ANCHOR_BOTTOM);
+                marker.setTitle("Dropped Pin");
+
+                // Optional: use your custom icon
+                Drawable customIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.drawing_pin);
+                if (customIcon != null) {
+                    //setting size not working
+                    customIcon.setBounds(0 ,0, customIcon.getIntrinsicWidth() / 10, customIcon.getIntrinsicHeight() / 10);
+                    marker.setIcon(customIcon);
+                }
+
+                map.getOverlays().add(marker);
+                map.invalidate(); // Refresh map
+
+                return true;
+            }
+
+            @Override
+            public boolean longPressHelper(GeoPoint p) {
+                return false;
+            }
+        }));
+
+        // Center map on given location
         GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
         IMapController mapController = map.getController();
         mapController.setZoom(19);
