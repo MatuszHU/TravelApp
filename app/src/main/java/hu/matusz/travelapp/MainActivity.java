@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize the MapView
         MapView map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setTilesScaledToDpi(true);
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
