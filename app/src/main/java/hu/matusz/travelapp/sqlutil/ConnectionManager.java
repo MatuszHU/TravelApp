@@ -4,23 +4,24 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 class ConnectionManager {
-        public static void loader() {
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-            } catch (Exception ex) {
-                System.err.println("Failed to load Connection Manager Driver! MM01 -- "+ex.toString());
-            }
+    static void load() {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+        } catch (Exception e) {
+            System.err.println("Failed to load Connection Manager Driver! MM01 -- " + e.toString());
         }
+    }
 
-    public void databaseConnect(){
+    Connection databaseConnect() {
         Connection dataConnection = null;
         try {
-            dataConnection =
-                    DriverManager.getConnection("bodma.dyndns.org:5155");
+            dataConnection = DriverManager.getConnection("bodma.dyndns.org:5155");
+            return dataConnection;
         } catch (SQLException e) {
-            System.out.println("SQLException: " + e.getMessage());
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("VendorError: " + e.getErrorCode());
+            System.out.println("SQLException: MM02 -- " + e.getMessage());
+            System.out.println("SQLState: MM03 --" + e.getSQLState());
+            System.out.println("VendorError: MM04 --" + e.getErrorCode());
+            return null;
         }
     }
 }
