@@ -14,7 +14,7 @@ public class SQLSelect {
     ResultSet res = null;
     ConnectionManager connectionManager = new ConnectionManager();
 
-    public void getData(String selectStatement){
+    public ResultSet getData(String selectStatement){
 
         connectionManager.load();
         Connection conn = connectionManager.databaseConnect();
@@ -24,15 +24,7 @@ public class SQLSelect {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString()+" -- MM05");
         }
-        if (res != null) {
-            try {
-                res.close();
-            } catch (SQLException e) {
-                //?Meh.. cannot really happen (hopefully)
-                System.err.println(e.toString() + "MM06");
-            }
-            res = null;
-        }
-
+        if (res != null) return res;
+        else return null;
     }
 }

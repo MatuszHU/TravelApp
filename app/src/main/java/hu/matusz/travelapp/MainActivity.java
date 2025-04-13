@@ -8,6 +8,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.sql.ResultSet;
+
+import hu.matusz.travelapp.sqlutil.SQLSelect;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -21,5 +25,11 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+
+        SQLSelect statement = new SQLSelect();
+        //!Note: Using backticks (`) is not necessary, but highly recommended by the developers.
+        ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
+
     }
 }

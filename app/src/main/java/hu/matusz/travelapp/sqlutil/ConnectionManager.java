@@ -13,9 +13,9 @@ class ConnectionManager {
     }
 
     Connection databaseConnect() {
-        Connection dataConnection = null;
+        Connection dataConnection;
         try {
-            dataConnection = DriverManager.getConnection("bodma.dyndns.org:5155");
+            dataConnection = DriverManager.getConnection("https://bodma.dyndns.org:5155");
             return dataConnection;
         } catch (SQLException e) {
             System.out.println("SQLException: MM02 -- " + e.getMessage());
