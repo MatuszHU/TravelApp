@@ -1,6 +1,7 @@
 package hu.matusz.travelapp;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         SQLSelect statement = new SQLSelect();
-        //!Note: Using backticks (`) is not necessary, but highly recommended by the developers.
+        //! Note: Using backticks (`) is not necessary, but highly recommended by the developers.
         ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
-
+        Log.d("SQLLog", dataSet.toString());
     }
 }

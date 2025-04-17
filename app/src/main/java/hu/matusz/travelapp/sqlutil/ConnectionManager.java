@@ -3,6 +3,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * @deprecated 17.04 -- Android does not support it
+ */
 class ConnectionManager {
     static void load() {
         try {
@@ -11,11 +14,12 @@ class ConnectionManager {
             System.err.println("Failed to load Connection Manager Driver! MM01 -- " + e.toString());
         }
     }
-
     Connection databaseConnect() {
+
         Connection dataConnection;
         try {
-            dataConnection = DriverManager.getConnection("https://bodma.dyndns.org:5155");
+            load();
+            dataConnection = DriverManager.getConnection("bodma.dyndns.org:5155");
             return dataConnection;
         } catch (SQLException e) {
             System.out.println("SQLException: MM02 -- " + e.getMessage());

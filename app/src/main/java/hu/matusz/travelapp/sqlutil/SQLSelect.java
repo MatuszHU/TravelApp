@@ -7,19 +7,21 @@ import java.sql.ResultSet;
 
 /**
  * @author Máté Majoros
+ * @deprecated 17.04 -- Android does not support it
  * This class is to get SQL data with SELECT statement. It is dependent on ConnectionManagement and remote SQL database.
  * @version v1 - written on the plane, so no connection to the database. But the code compiles
  */
 public class SQLSelect {
     ResultSet res = null;
     ConnectionManager connectionManager = new ConnectionManager();
-
+    Statement statement = null;
     public ResultSet getData(String selectStatement){
 
-        connectionManager.load();
+
         Connection conn = connectionManager.databaseConnect();
         try {
-            res = conn.createStatement().executeQuery(selectStatement);
+            statement = conn.createStatement();
+            res = statement.executeQuery(selectStatement);
 
         } catch (SQLException e) {
             throw new RuntimeException(e.toString()+" -- MM05");
