@@ -4,7 +4,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
+ * @author Máté
  * @deprecated 17.04 -- Android does not support it
+ * @version v1
  */
 class ConnectionManager {
     static void load() {

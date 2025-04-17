@@ -51,7 +51,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
 
     private void launchCredentialManager() {
         GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)
+                .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(getString(R.string.default_web_client_id))
                 .build();
 

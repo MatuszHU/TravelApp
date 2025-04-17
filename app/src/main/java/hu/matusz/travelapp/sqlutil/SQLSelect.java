@@ -6,7 +6,7 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 
 /**
- * @author Máté Majoros
+ * @author Máté
  * @deprecated 17.04 -- Android does not support it
  * This class is to get SQL data with SELECT statement. It is dependent on ConnectionManagement and remote SQL database.
  * @version v1 - written on the plane, so no connection to the database. But the code compiles
