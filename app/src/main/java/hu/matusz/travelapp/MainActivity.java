@@ -12,12 +12,29 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.credentials.CustomCredential;
 import androidx.credentials.GetCredentialRequest;
-import androidx.credentials.Credential;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.credentials.ClearCredentialStateRequest;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.ClearCredentialException;
+import androidx.credentials.exceptions.GetCredentialException;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
+import java.util.concurrent.Executors;
 
 import java.sql.ResultSet;
 
@@ -42,31 +59,5 @@ public class MainActivity extends AppCompatActivity {
         // Note: Using backticks (`) is not necessary, but highly recommended by the developers.
         //ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
         //Log.d("SQLLog", dataSet.toString());
-
-        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)
-                .setServerClientId(getBaseContext().getString(R.string.default_web_client_id))
-                .build();
-
-        GetCredentialRequest request = new GetCredentialRequest.Builder()
-                .addCredentialOption(googleIdOption)
-                .build();
-
-
-        private void handleSignIn(Credential credential) {
-            // Check if credential is of type Google ID
-            if (credential instanceof CustomCredential customCredential
-                    && credential.getType().equals(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
-                // Create Google ID Token
-                Bundle credentialData = customCredential.getData();
-                GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credentialData);
-
-                // Sign in to Firebase with using the token
-                firebaseAuthWithGoogle(googleIdTokenCredential.getIdToken());
-            } else {
-                Log.w(TAG, "Credential is not of type Google ID!");
-            }
-        }
-
     }
 }
