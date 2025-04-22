@@ -5,8 +5,14 @@ import static com.google.android.libraries.identity.googleid.GoogleIdTokenCreden
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.Credential;
@@ -33,12 +39,14 @@ public class GoogleSignInActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private CredentialManager credentialManager;
 
-
+    private  LinearLayout containerLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
+        setContentView(R.layout.login_activity);
         credentialManager = CredentialManager.create(getBaseContext());
+        containerLayout = findViewById(R.id.containerLayout);
         launchCredentialManager();
     }
 
@@ -126,6 +134,11 @@ public class GoogleSignInActivity extends AppCompatActivity {
                 });
     }
     private void updateUI(FirebaseUser user) {
+        TextView newTextView = new TextView(this);
+        newTextView.setText("Neues element");
+        newTextView.setTextSize(18);
+        newTextView.setPadding(0, 10, 0, 10);
 
+        containerLayout.addView(newTextView);
     }
 }
