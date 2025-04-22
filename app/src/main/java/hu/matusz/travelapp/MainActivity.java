@@ -12,9 +12,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.android.gms.common.SignInButton;
+import com.google.firebase.database.FirebaseDatabase;
+
 import hu.matusz.travelapp.sqlutil.SQLSelect;
 
 
@@ -39,11 +43,14 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        //SQLSelect statement = new SQLSelect();
-        // Note: Using backticks (`) is not necessary, but highly recommended by the developers.
-        //ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
-        //Log.d("SQLLog", dataSet.toString());
+        /*SQLSelect statement = new SQLSelect();
+        Note: Using backticks (`) is not necessary, but highly recommended by the developers.
+        ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
+        Log.d("SQLLog", dataSet.toString());*/
 
+
+        FirebaseApp.initializeApp(this);
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
     }
 

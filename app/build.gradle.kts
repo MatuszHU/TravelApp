@@ -35,6 +35,8 @@ android {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation("com.google.firebase:firebase-auth:22.3.0")
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
     implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
