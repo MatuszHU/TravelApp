@@ -2,6 +2,7 @@ package hu.matusz.travelapp.classes;
 
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -25,6 +26,7 @@ public class CustomMarkerInfoWindow extends InfoWindow {
         View view = mView;
         TextView title = view.findViewById(R.id.title);
         Button removeButton = view.findViewById(R.id.remove_button);
+        ImageButton closeButton = view.findViewById(R.id.close_button);
 
         title.setText(marker.getTitle());
 
@@ -39,6 +41,10 @@ public class CustomMarkerInfoWindow extends InfoWindow {
                     .setNegativeButton("Cancel", null)
                     .show();
             close(); // close InfoWindow
+        });
+
+        closeButton.setOnClickListener(v -> {
+            marker.closeInfoWindow(); //
         });
     }
 
