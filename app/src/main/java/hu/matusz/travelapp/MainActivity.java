@@ -13,12 +13,17 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import java.io.File;
 
+import hu.matusz.travelapp.classes.CustomMarkerInfoWindow;
+
 public class MainActivity extends AppCompatActivity {
+    private MapView map;
 
     /**
      * Creates a osm map
@@ -47,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Initialize the MapView
-        MapView map = findViewById(R.id.map);
+        map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setTilesScaledToDpi(true);
         map.setBuiltInZoomControls(true);
@@ -62,6 +67,17 @@ public class MainActivity extends AppCompatActivity {
                 marker.setPosition(p);
                 marker.setAnchor(0.05f, 0.95f);
                 marker.setTitle("Dropped Pin");
+
+                marker.setInfoWindow(new CustomMarkerInfoWindow(map));
+                marker.setOnMarkerClickListener((m, mapView) -> {
+                    if (m.isInfoWindowShown()) {
+                        m.closeInfoWindow(); // 👈 schließt das InfoWindow
+                    } else {
+                        m.showInfoWindow(); // 👈 öffnet es
+                    }
+                    return true; // wir haben den Klick verarbeitet
+                });
+
 
                 // Optional: use your custom icon
                 Drawable customIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.drawing_pin);
