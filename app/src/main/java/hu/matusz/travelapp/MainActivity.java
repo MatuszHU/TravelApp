@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat;
 
 import java.io.File;
 
+import hu.matusz.travelapp.classes.CustomMarker;
 import hu.matusz.travelapp.classes.CustomMarkerInfoWindow;
 
 public class MainActivity extends AppCompatActivity {
@@ -63,29 +64,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 // Add marker at tapped location
-                Marker marker = new Marker(map);
-                marker.setPosition(p);
-                marker.setAnchor(0.05f, 0.95f);
-                marker.setTitle("Dropped Pin");
-
-                marker.setInfoWindow(new CustomMarkerInfoWindow(map));
-                marker.setOnMarkerClickListener((m, mapView) -> {
-                    if (m.isInfoWindowShown()) {
-                        m.closeInfoWindow(); // 👈 schließt das InfoWindow
-                    } else {
-                        m.showInfoWindow(); // 👈 öffnet es
-                    }
-                    return true; // wir haben den Klick verarbeitet
-                });
-
-
-                // Optional: use your custom icon
-                Drawable customIcon = ContextCompat.getDrawable(MainActivity.this, R.drawable.drawing_pin);
-                if (customIcon != null) {
-                    //setting size not working
-                    customIcon.setBounds(0 ,0, customIcon.getIntrinsicWidth() / 10, customIcon.getIntrinsicHeight() / 10);
-                    marker.setIcon(customIcon);
-                }
+                CustomMarker marker = new CustomMarker(map, p);
 
                 map.getOverlays().add(marker);
                 map.invalidate(); // Refresh map
