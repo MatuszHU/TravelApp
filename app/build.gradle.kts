@@ -33,7 +33,9 @@ android {
 
 dependencies {
     //Open Stree map libary
-    implementation ("org.osmdroid:osmdroid-android:6.1.16")
+    implementation (libs.osmdroid.android)
+    implementation (libs.osmbonuspack)
+
 
 
     implementation(libs.appcompat)
