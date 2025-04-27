@@ -13,6 +13,9 @@ import org.osmdroid.views.overlay.infowindow.InfoWindow;
 
 import hu.matusz.travelapp.R;
 
+/**
+ * Custom InfoWindow
+ */
 public class CustomMarkerInfoWindow extends InfoWindow {
 
     public CustomMarkerInfoWindow(MapView mapView) {
@@ -30,6 +33,7 @@ public class CustomMarkerInfoWindow extends InfoWindow {
 
         title.setText(marker.getTitle());
 
+        //Removing pin via button
         removeButton.setOnClickListener(v -> {
             new AlertDialog.Builder(mMapView.getContext())
                     .setTitle("Remove pin")
@@ -43,6 +47,7 @@ public class CustomMarkerInfoWindow extends InfoWindow {
             close(); // close InfoWindow
         });
 
+        //Close info window through Button
         closeButton.setOnClickListener(v -> {
             marker.closeInfoWindow(); //
         });

@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         startMarker.setTitle("Get doxed lol");
         map.getOverlays().add(startMarker);
 
-        // Optional: refresh view
+        // refresh view
         map.invalidate();
     }
 

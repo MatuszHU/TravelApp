@@ -11,17 +11,23 @@ import org.osmdroid.views.overlay.Marker;
 import hu.matusz.travelapp.MainActivity;
 import hu.matusz.travelapp.R;
 
+/**
+ * Custom marker
+ */
 public class CustomMarker extends Marker {
 
     public CustomMarker(MapView mapView, GeoPoint p) {
         super(mapView);
 
         setPosition(p);
-        //sets position over pin
+
+        // sets position relative to pin
         setAnchor(0.05f, 0.95f);
         setTitle("Dropped pin");
 
         setInfoWindow(new CustomMarkerInfoWindow(mapView));
+
+        // Opens and closes infoWindow on click
         setOnMarkerClickListener((m, mv) -> {
             if (m.isInfoWindowShown()) {
                 m.closeInfoWindow(); // 👈 schließt das InfoWindow
@@ -32,6 +38,7 @@ public class CustomMarker extends Marker {
         });
 
 
+        // Sets marker icon
         Drawable customIcon = ContextCompat.getDrawable(mapView.getContext(), R.drawable.drawing_pin);
         if (customIcon != null) {
             customIcon.setBounds(0 ,0, customIcon.getIntrinsicWidth() / 10, customIcon.getIntrinsicHeight() / 10);
