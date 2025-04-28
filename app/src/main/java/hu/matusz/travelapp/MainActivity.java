@@ -40,9 +40,6 @@ public class MainActivity extends AppCompatActivity {
     // only for development
     private int markerCounter = 0;
 
-    //todo: move info window
-    // when other pin gets clicked this pins content in info window
-
     /**
      * Creates a osm map
      * @param savedInstanceState If the activity is being re-initialized after
