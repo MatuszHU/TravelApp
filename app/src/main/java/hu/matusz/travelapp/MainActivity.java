@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 
 import hu.matusz.travelapp.classes.CustomMarker;
+import hu.matusz.travelapp.network.NominatimService;
 import hu.matusz.travelapp.utils.InfoPanelAnimator;
 
 public class MainActivity extends AppCompatActivity {
@@ -141,19 +142,34 @@ public class MainActivity extends AppCompatActivity {
      * @param point Location where marker should be added
      */
     private void addMarkerAt(GeoPoint point) {
+        // Clip to nearest POI using Nominatim
+        NominatimService.reverseGeocode(point, new NominatimService.GeocodingCallback() {
+            @Override
+            public void onSuccess(String name) {
+                placeMarker(point, name);
+            }
+
+            @Override
+            public void onError(String fallbackName) {
+                placeMarker(point, fallbackName);
+            }
+        });
+    }
+
+    /**
+     * Adds a marker at a given point
+     * @param point Location where marker should be added
+     * @param name Name of the location
+     */
+    private void placeMarker(GeoPoint point, String name) {
         CustomMarker marker = new CustomMarker(map, point);
-        marker.setTitle("New Pin " + markerCounter);
+        marker.setTitle(name);
         selectedMarker = marker;
-        markerCounter++;
 
-        // defines behavior of pins when clicked
         marker.setOnMarkerClickListener((m, mapView) -> {
-            if(m.equals((selectedMarker)))
-                return true;
-
+            if (m.equals(selectedMarker)) return true;
             selectedMarker = m;
             openInfoPanel(m);
-
             return true;
         });
 
@@ -161,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
         openInfoPanel(marker);
         map.invalidate();
     }
+
 
     /**
      * Opens the info panel to the given marker
