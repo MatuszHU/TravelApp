@@ -54,8 +54,8 @@ public class NominatimService {
                 try {
                     String body = response.body().string();
                     JSONObject json = new JSONObject(body);
-                    String displayName = json.optString("display_name", "Dropped Pin");
-                    runOnUiThread(() -> callback.onSuccess(displayName));
+                    String name = json.optString("name", "Dropped Pin");
+                    runOnUiThread(() -> callback.onSuccess(name));
                 } catch (Exception e) {
                     Log.e("Nominatim", "Parsing failed", e);
                     runOnUiThread(() -> callback.onError("Dropped Pin"));
