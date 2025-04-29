@@ -16,27 +16,14 @@ import hu.matusz.travelapp.R;
  */
 public class CustomMarker extends Marker {
 
-    public CustomMarker(MapView mapView, GeoPoint p) {
+    /**
+     * Constructor
+     * @param mapView view on which marker is
+     * @param point location where marker should be added
+     */
+    public CustomMarker(MapView mapView, GeoPoint point) {
         super(mapView);
-
-        setPosition(p);
-
-        // sets position relative to pin
-        setAnchor(0.05f, 0.95f);
-        setTitle("Dropped pin");
-
-        setInfoWindow(new CustomMarkerInfoWindow(mapView));
-
-        // Opens and closes infoWindow on click
-        setOnMarkerClickListener((m, mv) -> {
-            if (m.isInfoWindowShown()) {
-                m.closeInfoWindow(); // 👈 schließt das InfoWindow
-            } else {
-                m.showInfoWindow(); // 👈 öffnet es
-            }
-            return true;
-        });
-
+        setPosition(point);
 
         // Sets marker icon
         Drawable customIcon = ContextCompat.getDrawable(mapView.getContext(), R.drawable.drawing_pin);

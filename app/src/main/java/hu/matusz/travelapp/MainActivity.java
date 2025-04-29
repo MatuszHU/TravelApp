@@ -11,20 +11,34 @@ import org.osmdroid.views.overlay.Marker;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import java.io.File;
 
 import hu.matusz.travelapp.classes.CustomMarker;
-import hu.matusz.travelapp.classes.CustomMarkerInfoWindow;
+import hu.matusz.travelapp.utils.InfoPanelAnimator;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
     private MapView map;
+    private LinearLayout infoPanel;
+    private TextView pinTitle;
+    private ImageButton closePanelButton;
+    private Button deletePinButton;
+    private Marker selectedMarker = null;
+
+    // only for development
+    private int markerCounter = 0;
 
     /**
      * Creates a osm map
@@ -50,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         Configuration.getInstance().load(ctx, prefs);
 
         // Set layout
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_map);
 
         // Initialize the MapView
         map = findViewById(R.id.map);
@@ -59,16 +73,43 @@ public class MainActivity extends AppCompatActivity {
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
+        // Initialize views
+        infoPanel = findViewById(R.id.info_panel);
+        pinTitle = findViewById(R.id.pin_title);
+        closePanelButton = findViewById(R.id.close_panel_button);
+        deletePinButton = findViewById(R.id.delete_pin_button);
+
+        // closes infoPanel
+        closePanelButton.setOnClickListener(v -> {
+            closeInfoPanel();
+            selectedMarker = null;
+        });
+
+        // configure delete button
+        deletePinButton.setOnClickListener(v -> {
+            if (selectedMarker != null) {
+
+                // Alerts before deleting
+                new AlertDialog.Builder(map.getContext())
+                        .setTitle("Remove pin")
+                        .setMessage("Do you want to remove the pin \"" + selectedMarker.getTitle() + "\" ?")
+                        .setPositiveButton("Remove", (dialog, which) -> {
+                            map.getOverlays().remove(selectedMarker);
+                            closeInfoPanel();
+                            selectedMarker = null;
+                            map.invalidate();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
+        });
+
         // Add event listener to detect map taps
         map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 // Add marker at tapped location
-                CustomMarker marker = new CustomMarker(map, p);
-
-                map.getOverlays().add(marker);
-                map.invalidate(); // Refresh map
-
+                addMarkerAt(p);
                 return true;
             }
 
@@ -95,5 +136,47 @@ public class MainActivity extends AppCompatActivity {
         map.invalidate();
     }
 
+    /**
+     * Adds a marker at a given point
+     * @param point Location where marker should be added
+     */
+    private void addMarkerAt(GeoPoint point) {
+        CustomMarker marker = new CustomMarker(map, point);
+        marker.setTitle("New Pin " + markerCounter);
+        selectedMarker = marker;
+        markerCounter++;
+
+        // defines behavior of pins when clicked
+        marker.setOnMarkerClickListener((m, mapView) -> {
+            if(m.equals((selectedMarker)))
+                return true;
+
+            selectedMarker = m;
+            openInfoPanel(m);
+
+            return true;
+        });
+
+        map.getOverlays().add(marker);
+        openInfoPanel(marker);
+        map.invalidate();
+    }
+
+    /**
+     * Opens the info panel to the given marker
+     * @param marker The marker to which the info panel should be shown
+     */
+    private void openInfoPanel(Marker marker) {
+        pinTitle.setText(marker.getTitle());
+        if (!(infoPanel.getVisibility() == View.VISIBLE))
+            InfoPanelAnimator.showPanel(infoPanel);
+    }
+
+    /**
+     * Closes info panel
+     */
+    private void closeInfoPanel() {
+        InfoPanelAnimator.hidePanel(infoPanel);
+    }
 
 }
