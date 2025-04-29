@@ -35,8 +35,7 @@ dependencies {
     //Open Stree map libary
     implementation (libs.osmdroid.android)
     implementation (libs.osmbonuspack)
-
-
+    implementation(libs.okhttp)
 
     implementation(libs.appcompat)
     implementation(libs.material)
