@@ -24,6 +24,8 @@ public class CustomMarker extends Marker {
     public CustomMarker(MapView mapView, GeoPoint point) {
         super(mapView);
         setPosition(point);
+        // sets position relative to pin
+        setAnchor(0.05f, 0.95f);
 
         // Sets marker icon
         Drawable customIcon = ContextCompat.getDrawable(mapView.getContext(), R.drawable.drawing_pin);
