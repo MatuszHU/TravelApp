@@ -1,4 +1,4 @@
-package hu.matusz.travelapp.databaseUtil;
+package hu.matusz.travelapp.util.database;
 
 import android.util.Log;
 
@@ -15,14 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import hu.matusz.travelapp.databaseUtil.dataClasses.Comment;
-import hu.matusz.travelapp.databaseUtil.dataClasses.GeoLocation;
-import hu.matusz.travelapp.databaseUtil.dataClasses.User;
+import hu.matusz.travelapp.util.database.models.Comment;
+import hu.matusz.travelapp.util.database.models.GeoLocation;
+import hu.matusz.travelapp.util.database.models.User;
 
 /**
- * @deprecated
+ * @deprecated Basically useless junk
  * @author Matusz
  * @version v6
+ *
  */
 public class DataConnect {
     private static final String TAG = "FirebaseDatabaseHelper";

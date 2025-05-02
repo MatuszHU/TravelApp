@@ -1,4 +1,4 @@
-package hu.matusz.travelapp.databaseUtil.dataClasses;
+package hu.matusz.travelapp.util.database.models;
 
 public class User {
     private String userId;

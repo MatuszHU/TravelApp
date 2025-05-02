@@ -1,4 +1,4 @@
-package hu.matusz.travelapp.databaseUtil;
+package hu.matusz.travelapp.util.database;
 
 import android.util.Log;
 
@@ -18,7 +18,7 @@ import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 
-import hu.matusz.travelapp.databaseUtil.dataClasses.User;
+import hu.matusz.travelapp.util.database.models.User;
 public class FirestoreDataHandler {
     FirebaseFirestore firestore;
     public void init(){

@@ -29,8 +29,8 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 import java.util.concurrent.Executors;
 
-import hu.matusz.travelapp.databaseUtil.FirestoreDataHandler;
-import hu.matusz.travelapp.databaseUtil.dataClasses.User;
+import hu.matusz.travelapp.util.database.FirestoreDataHandler;
+import hu.matusz.travelapp.util.database.models.User;
 
 
 public class GoogleSignInActivity extends AppCompatActivity {

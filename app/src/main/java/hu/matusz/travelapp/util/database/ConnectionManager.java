@@ -1,4 +1,4 @@
-package hu.matusz.travelapp.sqlutil;
+package hu.matusz.travelapp.util.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
