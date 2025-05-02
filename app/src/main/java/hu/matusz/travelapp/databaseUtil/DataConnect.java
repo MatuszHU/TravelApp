@@ -4,8 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -14,7 +12,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,13 +19,18 @@ import hu.matusz.travelapp.databaseUtil.dataClasses.Comment;
 import hu.matusz.travelapp.databaseUtil.dataClasses.GeoLocation;
 import hu.matusz.travelapp.databaseUtil.dataClasses.User;
 
-public class dataConnect {
+/**
+ * @deprecated
+ * @author Matusz
+ * @version v6
+ */
+public class DataConnect {
     private static final String TAG = "FirebaseDatabaseHelper";
     private final FirebaseDatabase database;
     private final DatabaseReference usersRef;
     private final DatabaseReference commentsRef;
     private final DatabaseReference locationsRef;
-
+    @Deprecated
     public interface DataStatus {
         void DataIsLoaded(Object obj);
         void DataIsInserted();
@@ -36,16 +38,17 @@ public class dataConnect {
         void DataIsDeleted();
         void DataIsError(String errorMessage);
     }
-
-    public dataConnect() {
+    @Deprecated
+    public DataConnect() {
         database = FirebaseDatabase.getInstance();
         usersRef = database.getReference("users");
         commentsRef = database.getReference("comments");
         locationsRef = database.getReference("locations");
     }
 
-    // USER OPERATIONS
+    @Deprecated
     public void saveUser(User user, final DataStatus dataStatus) {
+        Log.d("DEBUG_CHECK", "saveUser meghívva: " + user.getUserId());
         usersRef.child(user.getUserId()).setValue(user)
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User saved successfully");
@@ -56,7 +59,7 @@ public class dataConnect {
                     if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
                 });
     }
-
+    @Deprecated
     public void getUser(String userId, final DataStatus dataStatus) {
         usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -76,7 +79,7 @@ public class dataConnect {
             }
         });
     }
-
+    @Deprecated
     public void updateUser(String userId, Map<String, Object> updates, final DataStatus dataStatus) {
         usersRef.child(userId).updateChildren(updates)
                 .addOnSuccessListener(aVoid -> {
@@ -88,7 +91,7 @@ public class dataConnect {
                     if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
                 });
     }
-
+    @Deprecated
     public void deleteUser(String userId, final DataStatus dataStatus) {
         usersRef.child(userId).removeValue()
                 .addOnSuccessListener(aVoid -> {
@@ -101,7 +104,7 @@ public class dataConnect {
                 });
     }
 
-    // GEOLOCATION OPERATIONS
+    @Deprecated
     public void saveLocation(GeoLocation location, final DataStatus dataStatus) {
         locationsRef.child(location.getGeoId()).setValue(location)
                 .addOnSuccessListener(aVoid -> {
@@ -113,7 +116,7 @@ public class dataConnect {
                     if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
                 });
     }
-
+    @Deprecated
     public void getLocation(String geoId, final DataStatus dataStatus) {
         locationsRef.child(geoId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -133,7 +136,7 @@ public class dataConnect {
             }
         });
     }
-
+    @Deprecated
     public void getLocationsNearby(double centerX, double centerY, double radius, final DataStatus dataStatus) {
         locationsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -159,7 +162,7 @@ public class dataConnect {
         });
     }
 
-    // COMMENT OPERATIONS
+    @Deprecated
     public void saveComment(Comment comment, final DataStatus dataStatus) {
         // A Firebase automatikusan generál egy egyedi ID-t
         String commentId = comment.getCommentId();
@@ -178,7 +181,7 @@ public class dataConnect {
                     if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
                 });
     }
-
+    @Deprecated
     public void getCommentsByUser(String userId, final DataStatus dataStatus) {
         Query query = commentsRef.orderByChild("userId").equalTo(userId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -201,7 +204,7 @@ public class dataConnect {
             }
         });
     }
-
+    @Deprecated
     public void getCommentsByLocation(String geoId, final DataStatus dataStatus) {
         Query query = commentsRef.orderByChild("geoId").equalTo(geoId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -224,7 +227,7 @@ public class dataConnect {
             }
         });
     }
-
+    @Deprecated
     public void updateComment(String commentId, Map<String, Object> updates, final DataStatus dataStatus) {
         commentsRef.child(commentId).updateChildren(updates)
                 .addOnSuccessListener(aVoid -> {
@@ -236,7 +239,7 @@ public class dataConnect {
                     if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
                 });
     }
-
+    @Deprecated
     public void deleteComment(String commentId, final DataStatus dataStatus) {
         commentsRef.child(commentId).removeValue()
                 .addOnSuccessListener(aVoid -> {
@@ -249,7 +252,7 @@ public class dataConnect {
                 });
     }
 
-    // UTILITY METHODS
+    @Deprecated
     private double calculateDistance(double x1, double y1, double x2, double y2) {
         // Euklideszi távolság számítása
         // Megjegyzés: Ha GPS koordinátákat használsz, akkor haversine képletet kellene használni

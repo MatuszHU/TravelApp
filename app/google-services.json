@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "853429563864",
+    "firebase_url": "https://travelapp2025erasmus-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "travelapp2025erasmus",
+    "storage_bucket": "travelapp2025erasmus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853429563864:android:f399944474392fcc2902ad",
+        "android_client_info": {
+          "package_name": "hu.matusz.travelapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "853429563864-o4914hv47ifilvbmonif04obcq0ufpak.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hu.matusz.travelapp",
+            "certificate_hash": "b50342ef953f4e212905c0d89c5f34f433069f14"
+          }
+        },
+        {
+          "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4JkI_5ih_F0wJmiE3m33Zo4CEwWnP5uM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

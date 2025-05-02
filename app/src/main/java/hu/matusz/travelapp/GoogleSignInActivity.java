@@ -5,14 +5,11 @@ import static com.google.android.libraries.identity.googleid.GoogleIdTokenCreden
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.EditText;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.Credential;
@@ -29,7 +26,11 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+
 import java.util.concurrent.Executors;
+
+import hu.matusz.travelapp.databaseUtil.FirestoreDataHandler;
+import hu.matusz.travelapp.databaseUtil.dataClasses.User;
 
 
 public class GoogleSignInActivity extends AppCompatActivity {
@@ -48,6 +49,26 @@ public class GoogleSignInActivity extends AppCompatActivity {
         credentialManager = CredentialManager.create(getBaseContext());
         containerLayout = findViewById(R.id.containerLayout);
         launchCredentialManager();
+
+
+        Button button = findViewById(R.id.button);
+
+        button.setOnClickListener(v -> {
+            FirestoreDataHandler fc = new FirestoreDataHandler();
+            fc.init();
+            fc.saveUser("Teszt Elek", "u002","HU", mAuth);
+            fc.readUser("u001", new FirestoreDataHandler.UserCallback() {
+                @Override
+                public void onUserReceived(User user) {
+                    Log.d("FIRESTORE", user.toString());
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Log.e("FIRESTORE", "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+                }
+            });
+        });
     }
 
     @Override
@@ -80,6 +101,9 @@ public class GoogleSignInActivity extends AppCompatActivity {
                     @Override
                     public void onError(GetCredentialException e) {
                         Log.e(GOOGLESIGNINLOGTAG, "Couldn't retrieve user's credentials: " + e.getLocalizedMessage());
+                        Log.e(GOOGLESIGNINLOGTAG, "Error Type: " + e.getClass().getSimpleName());
+                        Log.e(GOOGLESIGNINLOGTAG, "Localized Message: " + e.getLocalizedMessage());
+                        Log.e(GOOGLESIGNINLOGTAG, "Full Exception: ", e);
                     }
                 }
         );
@@ -134,11 +158,13 @@ public class GoogleSignInActivity extends AppCompatActivity {
                 });
     }
     private void updateUI(FirebaseUser user) {
+        //? TEST TEXT
         TextView newTextView = new TextView(this);
-        newTextView.setText("Neues element");
+        newTextView.setText("Új elem");
         newTextView.setTextSize(18);
         newTextView.setPadding(0, 10, 0, 10);
 
         containerLayout.addView(newTextView);
+
     }
 }

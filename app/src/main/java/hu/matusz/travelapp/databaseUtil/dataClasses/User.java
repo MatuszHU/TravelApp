@@ -1,14 +1,24 @@
 package hu.matusz.travelapp.databaseUtil.dataClasses;
 
 public class User {
-    private String userId;  // String típusúra változtattuk
+    private String userId;
     private String name;
     private String email;
     private String countryOfOriginCode;
 
-    // Üres konstruktor Firebase-hez
+
     public User() {
-        // Szükséges a Firebase-hez
+
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId='" + userId + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", countryOfOriginCode='" + countryOfOriginCode + '\'' +
+                '}';
     }
 
     public User(String userId, String name, String email, String countryOfOriginCode) {
