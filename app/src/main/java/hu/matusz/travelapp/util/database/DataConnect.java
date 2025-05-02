@@ -31,6 +31,7 @@ public class DataConnect {
     private final DatabaseReference usersRef;
     private final DatabaseReference commentsRef;
     private final DatabaseReference locationsRef;
+
     @Deprecated
     public interface DataStatus {
         void DataIsLoaded(Object obj);

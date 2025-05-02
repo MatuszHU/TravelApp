@@ -27,6 +27,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import org.jetbrains.annotations.TestOnly;
+
 import java.util.concurrent.Executors;
 
 import hu.matusz.travelapp.util.database.FirestoreDataHandler;
@@ -54,23 +56,27 @@ public class GoogleSignInActivity extends AppCompatActivity {
         Button button = findViewById(R.id.button);
 
         button.setOnClickListener(v -> {
-            FirestoreDataHandler fc = new FirestoreDataHandler();
-            fc.init();
-            fc.saveUser("Teszt Elek", "u002","HU", mAuth);
-            fc.readUser("u001", new FirestoreDataHandler.UserCallback() {
-                @Override
-                public void onUserReceived(User user) {
-                    Log.d("FIRESTORE", user.toString());
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    Log.e("FIRESTORE", "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
-                }
-            });
+            firestoreTest();
         });
     }
 
+    //* Testing
+    public void firestoreTest(){
+        FirestoreDataHandler fc = new FirestoreDataHandler();
+        fc.init();
+        fc.saveUser(new User("uAAA", "Teszt Elek", "teszt@teszt.hu", "HU"));
+        fc.readUser("u001", new FirestoreDataHandler.UserCallback() {
+            @Override
+            public void onAnswerReceived(User user) {
+                Log.d("FIRESTORE", user.toString());
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("FIRESTORE", "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+            }
+        });
+    }
     @Override
     public void onStart() {
         super.onStart();

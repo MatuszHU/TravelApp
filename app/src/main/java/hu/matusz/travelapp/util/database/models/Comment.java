@@ -1,16 +1,16 @@
 package hu.matusz.travelapp.util.database.models;
 
 public class Comment {
-    private String userId;  // String típusúra változtattuk
-    private String commentId;  // String típusúra változtattuk
+    private String userId;
+    private String commentId;
     private String title;
     private String comment;
     private int rate;
-    private String geoId;  // Új mező a helyszínhez kapcsolódáshoz
+    private String geoId;
 
-    // Üres konstruktor Firebase-hez
+
     public Comment() {
-        // Szükséges a Firebase-hez
+
     }
 
     public Comment(String userId, String commentId, String title, String comment, int rate, String geoId) {
