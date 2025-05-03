@@ -32,10 +32,6 @@ import hu.matusz.travelapp.util.database.models.User;
  */
 public class FirestoreDataHandler{
 
-    public interface Callback<T>{
-        void onAnswerReceived(T result);
-        void onError(Exception e);
-    }
 
     FirebaseFirestore firestore;
 
@@ -328,4 +324,6 @@ public class FirestoreDataHandler{
                     }
                 });
     }
+
+
 }

@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 
 import hu.matusz.travelapp.util.UUIDGen;
 import hu.matusz.travelapp.util.animations.SimpleLoadingAnimation;
+import hu.matusz.travelapp.util.database.Callback;
 import hu.matusz.travelapp.util.database.FirestoreDataHandler;
 import hu.matusz.travelapp.util.database.models.Comment;
 import hu.matusz.travelapp.util.database.models.User;
@@ -77,14 +78,14 @@ public class GoogleSignInActivity extends AppCompatActivity {
     }
 
 
-    //+ Testing, not in use
+    //+ Testing, no longer in use
     public void firestoreTest(){
         FirestoreDataHandler fc = new FirestoreDataHandler();
         UUIDGen u = new UUIDGen();
         String uu = u.getUUID();
         fc.init();
         //fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
-        fc.getUserById(uu, new FirestoreDataHandler.Callback<User>() {
+        fc.getUserById(uu, new Callback<User>() {
             @Override
             public void onAnswerReceived(User user) {
                 Log.d("FIRESTORE", user.toString());
@@ -96,7 +97,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
             }
         });
         fc.saveComment(new Comment(uu, u.getUUID(), "Teszt", "This is a test comment", 6, u.getUUID()));
-        fc.getAllComment(new FirestoreDataHandler.Callback<List<Comment>>() {
+        fc.getAllComment(new Callback<List<Comment>>() {
             @Override
             public void onAnswerReceived(List<Comment> result) {
                 for (int i = 0; i < result.size(); i++) {
@@ -169,7 +170,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
 
                         Log.d(GOOGLESIGNINLOGTAG, "signInWithCredential:success");
                         FirebaseUser user = mAuth.getCurrentUser();
-                        fc.getUserByEmail(user.getEmail(), new FirestoreDataHandler.Callback<User>() {
+                        fc.getUserByEmail(user.getEmail(), new Callback<User>() {
                             @Override
                             public void onAnswerReceived(User result) {
                                 if (result != null && result.getEmail() != null && !result.getEmail().isEmpty()) {
