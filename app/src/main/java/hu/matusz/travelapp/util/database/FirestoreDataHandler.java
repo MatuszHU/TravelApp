@@ -14,31 +14,42 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import hu.matusz.travelapp.util.database.models.Comment;
 import hu.matusz.travelapp.util.database.models.GeoLocation;
 import hu.matusz.travelapp.util.database.models.User;
+
+/**
+ * This class is responsible to handle the connection between the <i>remote database</i> and the <i>app</i>. <br>
+ * <b>Usage</b>: Before using it, connection has to be initiated with <b style="color: rgb(240,240,30);">init()</b>.
+ * @author matusz
+ * @version v2
+ * {}
+ */
 public class FirestoreDataHandler{
 
-    public interface UserCallback{
-        void onAnswerReceived(User user);
-        void onError(Exception e);
-    }
-    public interface CommentCallback{
-        void onAnswerReceived(Comment comment);
-        void onError(Exception e);
-    }
-    public interface LocationCallback{
-        void onAnswerReceived(GeoLocation geo);
+    public interface Callback<T>{
+        void onAnswerReceived(T result);
         void onError(Exception e);
     }
 
     FirebaseFirestore firestore;
+
+    /**
+     * Initiate connection
+     */
     public void init(){
         firestore = FirebaseFirestore.getInstance();
     }
+
+    /**
+     * Drop Connection
+     * @throws ConnectException
+     */
     public void voidConnection() throws ConnectException {
         firestore = null;
         Log.w("FIRESTORE","Connection dropped");
@@ -82,7 +93,7 @@ public class FirestoreDataHandler{
      * @see User
      */
 
-    public void readUser(String userId, UserCallback callback) {
+    public void readUser(String userId, Callback<User> callback) {
         firestore.collection("users")
                 .whereEqualTo("id", userId)
                 .get()
@@ -149,7 +160,7 @@ public class FirestoreDataHandler{
      * @param callback Interface separeting the cloud function from the main thread.
      * @see Comment
      */
-    public void readComment(String commentId, CommentCallback callback) {
+    public void readComment(String commentId, Callback<Comment> callback) {
         firestore.collection("comments")
                 .whereEqualTo("id", commentId)
                 .get()
@@ -165,7 +176,7 @@ public class FirestoreDataHandler{
                                 targetComment.setUserId((String) commentData.get("userId"));
                                 targetComment.setCommentId((String) commentData.get("commentId"));
                                 targetComment.setComment((String) commentData.get("comment"));
-                                targetComment.setRate((Integer) commentData.get("rate"));
+                                targetComment.setRate(Integer.parseInt((String) commentData.get("rate")));
                                 targetComment.setTitle((String) commentData.get("title"));
                                 targetComment.setGeoId((String) commentData.get("geoId"));
 
@@ -181,7 +192,32 @@ public class FirestoreDataHandler{
                 });
 
     }
-    public void readAllComment(){
+    public void readAllComment(Callback<List<Comment>> callback)
+    {
+        firestore.collection("comments")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<Comment> store = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Map<String, Object> commentData = document.getData();
 
+                                Comment targetComment = new Comment();
+                                targetComment.setUserId((String) commentData.get("userId"));
+                                targetComment.setCommentId((String) commentData.get("commentId"));
+                                targetComment.setComment((String) commentData.get("comment"));
+                                targetComment.setRate((Integer.parseInt((String) commentData.get("rate"))));
+                                targetComment.setTitle((String) commentData.get("title"));
+                                targetComment.setGeoId((String) commentData.get("geoId"));
+                                store.add(targetComment);
+                            }
+                            callback.onAnswerReceived(store);
+                        } else {
+                            callback.onError(task.getException());
+                        }
+                    }
+                });
     }
 }

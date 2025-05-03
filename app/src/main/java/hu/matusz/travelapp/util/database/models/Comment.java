@@ -69,4 +69,16 @@ public class Comment {
     public void setGeoId(String geoId) {
         this.geoId = geoId;
     }
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "userId='" + userId + '\'' +
+                ", commentId='" + commentId + '\'' +
+                ", title='" + title + '\'' +
+                ", comment='" + comment + '\'' +
+                ", rate=" + rate +
+                ", geoId='" + geoId + '\'' +
+                '}';
+    }
 }

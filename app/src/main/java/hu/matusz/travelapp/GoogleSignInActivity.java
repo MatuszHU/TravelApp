@@ -29,10 +29,12 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 import org.jetbrains.annotations.TestOnly;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 
 import hu.matusz.travelapp.util.UUIDGen;
 import hu.matusz.travelapp.util.database.FirestoreDataHandler;
+import hu.matusz.travelapp.util.database.models.Comment;
 import hu.matusz.travelapp.util.database.models.User;
 
 
@@ -67,8 +69,8 @@ public class GoogleSignInActivity extends AppCompatActivity {
         UUIDGen u = new UUIDGen();
         String uu = u.getUUID();
         fc.init();
-        fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
-        fc.readUser(uu, new FirestoreDataHandler.UserCallback() {
+        //fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
+        fc.readUser(uu, new FirestoreDataHandler.Callback<User>() {
             @Override
             public void onAnswerReceived(User user) {
                 Log.d("FIRESTORE", user.toString());
@@ -77,6 +79,20 @@ public class GoogleSignInActivity extends AppCompatActivity {
             @Override
             public void onError(Exception e) {
                 Log.e("FIRESTORE", "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+            }
+        });
+        fc.saveComment(new Comment(uu, u.getUUID(), "Teszt", "This is a test comment", 6, u.getUUID()));
+        fc.readAllComment(new FirestoreDataHandler.Callback<List<Comment>>() {
+            @Override
+            public void onAnswerReceived(List<Comment> result) {
+                for (int i = 0; i < result.size(); i++) {
+                    Log.d("FIRECOMMENT", "Comment #"+(i+1)+" "+result.get(i).toString());
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.d("FIRECOMMENT", e.toString());
             }
         });
     }
