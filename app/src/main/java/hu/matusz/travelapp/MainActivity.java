@@ -1,5 +1,6 @@
 package hu.matusz.travelapp;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        signInButton = findViewById(R.id.sign_in_button);
+        signInButton = findViewById(R.id.btnGoogleSignIn);
 
         signInButton.setSize(SignInButton.SIZE_WIDE);
 

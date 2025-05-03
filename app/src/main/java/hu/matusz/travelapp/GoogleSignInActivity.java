@@ -5,9 +5,7 @@ import static com.google.android.libraries.identity.googleid.GoogleIdTokenCreden
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,18 +29,20 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 import hu.matusz.travelapp.util.UUIDGen;
+import hu.matusz.travelapp.util.animations.SimpleLoadingAnimation;
 import hu.matusz.travelapp.util.database.FirestoreDataHandler;
 import hu.matusz.travelapp.util.database.models.Comment;
 import hu.matusz.travelapp.util.database.models.User;
 
 
 public class GoogleSignInActivity extends AppCompatActivity {
-
+    private FirestoreDataHandler fc;
+    public User localUser;
     private static final String GOOGLESIGNINLOGTAG = "GoogleLoginInformation";
 
     private FirebaseAuth mAuth;
     private CredentialManager credentialManager;
-
+    private SimpleLoadingAnimation sla;
     private  LinearLayout containerLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,23 +52,36 @@ public class GoogleSignInActivity extends AppCompatActivity {
         credentialManager = CredentialManager.create(getBaseContext());
         containerLayout = findViewById(R.id.containerLayout);
         launchCredentialManager();
+        fc = new FirestoreDataHandler();
+        fc.init();
+        sla = new SimpleLoadingAnimation(findViewById(R.id.loadingImage));
+        sla.startVariableSpeedRotation();
+
+        //+ Button button = findViewById(R.id.button);
+
+        //+button.setOnClickListener(v -> {
+            //+ Testing firestoreTest();
+        //+});
+    }
+    ///Experimental animation
 
 
-        Button button = findViewById(R.id.button);
 
-        button.setOnClickListener(v -> {
-            firestoreTest();
-        });
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        sla.destroy();
     }
 
-    //* Testing
+
+    //+ Testing, not in use
     public void firestoreTest(){
         FirestoreDataHandler fc = new FirestoreDataHandler();
         UUIDGen u = new UUIDGen();
         String uu = u.getUUID();
         fc.init();
         //fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
-        fc.getUser(uu, new FirestoreDataHandler.Callback<User>() {
+        fc.getUserById(uu, new FirestoreDataHandler.Callback<User>() {
             @Override
             public void onAnswerReceived(User user) {
                 Log.d("FIRESTORE", user.toString());
@@ -153,6 +166,21 @@ public class GoogleSignInActivity extends AppCompatActivity {
 
                         Log.d(GOOGLESIGNINLOGTAG, "signInWithCredential:success");
                         FirebaseUser user = mAuth.getCurrentUser();
+                        fc.getUserByEmail(user.getEmail(), new FirestoreDataHandler.Callback<User>() {
+                            @Override
+                            public void onAnswerReceived(User result) {
+                                if(result.getEmail() != null && !result.getEmail().equals("")){
+                                    localUser = result;
+                                }
+                                localUser.setName("Bógli");
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+
+                            }
+                        });
+                        Log.d("LOGINTEST", "firebaseAuthWithGoogle: "+localUser.getName());
                         updateUI(user);
                     } else {
                         Log.w(GOOGLESIGNINLOGTAG, "signInWithCredential:failure", task.getException());
@@ -181,13 +209,6 @@ public class GoogleSignInActivity extends AppCompatActivity {
                 });
     }
     private void updateUI(FirebaseUser user) {
-        //? TEST TEXT
-        TextView newTextView = new TextView(this);
-        newTextView.setText("Új elem");
-        newTextView.setTextSize(18);
-        newTextView.setPadding(0, 10, 0, 10);
-
-        containerLayout.addView(newTextView);
 
     }
 }

@@ -5,6 +5,7 @@ public class User {
     private String name;
     private String email;
     private String countryOfOriginCode;
+    private String photoURI;
 
 
     public User() {
@@ -18,21 +19,23 @@ public class User {
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
                 ", countryOfOriginCode='" + countryOfOriginCode + '\'' +
+                ", photoURI='" + photoURI + '\'' +
                 '}';
     }
 
-    public User(String userId, String name, String email, String countryOfOriginCode) {
+    public User(String userId, String name, String email, String photoURI) {
         this.userId = userId;
         this.name = name;
         this.email = email;
-        this.countryOfOriginCode = countryOfOriginCode;
+        this.photoURI = photoURI;
+        this.countryOfOriginCode = "";
     }
 
     public User(String userId, String name, String email) {
         this.userId = userId;
         this.name = name;
         this.email = email;
-        this.countryOfOriginCode = "N/A";
+        this.countryOfOriginCode = "";
     }
 
     public String getUserId() {
@@ -65,5 +68,13 @@ public class User {
 
     public void setCountryOfOriginCode(String countryOfOriginCode) {
         this.countryOfOriginCode = countryOfOriginCode;
+    }
+
+    public String getPhotoURI() {
+        return photoURI;
+    }
+
+    public void setPhotoURI(String photoURI) {
+        this.photoURI = photoURI;
     }
 }

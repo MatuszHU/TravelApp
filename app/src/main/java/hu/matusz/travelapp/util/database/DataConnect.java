@@ -76,7 +76,7 @@ public class DataConnect {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e(TAG, "getUser:onCancelled", databaseError.toException());
+                Log.e(TAG, "getUserById:onCancelled", databaseError.toException());
                 if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
             }
         });
@@ -133,7 +133,7 @@ public class DataConnect {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e(TAG, "getLocation:onCancelled", databaseError.toException());
+                Log.e(TAG, "getLocationById:onCancelled", databaseError.toException());
                 if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
             }
         });

@@ -71,6 +71,7 @@ public class FirestoreDataHandler{
         userMap.put("name", user.getName());
         userMap.put("cc", user.getCountryOfOriginCode());
         userMap.put("email", user.getEmail());
+        userMap.put("pic", user.getPhotoURI());
 
         firestore.collection("users").add(userMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
@@ -93,7 +94,7 @@ public class FirestoreDataHandler{
      * @see User
      */
 
-    public void getUser(String userId, Callback<User> callback) {
+    public void getUserById(String userId, Callback<User> callback) {
         firestore.collection("users")
                 .whereEqualTo("id", userId)
                 .get()
@@ -110,7 +111,7 @@ public class FirestoreDataHandler{
                                 targetUser.setName((String) userData.get("name"));
                                 targetUser.setCountryOfOriginCode((String) userData.get("cc"));
                                 targetUser.setEmail((String) userData.get("email"));
-
+                                targetUser.setPhotoURI((String) userData.get("pic"));
                                 callback.onAnswerReceived(targetUser);
                             } else {
                                 callback.onError(new Exception("User not found"));
@@ -123,6 +124,48 @@ public class FirestoreDataHandler{
                 });
 
     }
+
+
+    /**
+     * Search and read a specific comment from <i style="color: red">Firestore</i>.
+     * @author Matusz
+     * @version v1
+     * @param email Email identifer for <i>users</i>
+     * @param callback Interface separeting the cloud function from the main thread.
+     * @see User
+     */
+
+    public void getUserByEmail(String email, Callback<User> callback) {
+        firestore.collection("users")
+                .whereEqualTo("email", email)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            if (!task.getResult().isEmpty()) {
+                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+                                Map<String, Object> userData = document.getData();
+
+                                User targetUser = new User();
+                                targetUser.setUserId((String) userData.get("id"));
+                                targetUser.setName((String) userData.get("name"));
+                                targetUser.setCountryOfOriginCode((String) userData.get("cc"));
+                                targetUser.setEmail((String) userData.get("email"));
+                                targetUser.setPhotoURI((String) userData.get("pic"));
+                                callback.onAnswerReceived(targetUser);
+                            } else {
+                                callback.onError(new Exception("User not found"));
+                            }
+                        } else {
+                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
+                            callback.onError(task.getException());
+                        }
+                    }
+                });
+
+    }
+
     /**
      * Saves comment to <i style="color: red">Firestore</i>
      * @author Matusz
@@ -160,7 +203,7 @@ public class FirestoreDataHandler{
      * @param callback Interface separeting the cloud function from the main thread.
      * @see Comment
      */
-    public void readComment(String commentId, Callback<Comment> callback) {
+    public void getCommentById(String commentId, Callback<Comment> callback) {
         firestore.collection("comments")
                 .whereEqualTo("id", commentId)
                 .get()
@@ -256,7 +299,7 @@ public class FirestoreDataHandler{
      * @param callback Interface separeting the cloud function from the main thread.
      * @see GeoLocation
      */
-    public void getLocation(String locationId, Callback<GeoLocation> callback) {
+    public void getLocationById(String locationId, Callback<GeoLocation> callback) {
         firestore.collection("locations")
                 .whereEqualTo("id", locationId)
                 .get()
