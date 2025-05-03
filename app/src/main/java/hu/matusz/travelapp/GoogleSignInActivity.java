@@ -31,6 +31,7 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.util.concurrent.Executors;
 
+import hu.matusz.travelapp.util.UUIDGen;
 import hu.matusz.travelapp.util.database.FirestoreDataHandler;
 import hu.matusz.travelapp.util.database.models.User;
 
@@ -63,9 +64,11 @@ public class GoogleSignInActivity extends AppCompatActivity {
     //* Testing
     public void firestoreTest(){
         FirestoreDataHandler fc = new FirestoreDataHandler();
+        UUIDGen u = new UUIDGen();
+        String uu = u.getUUID();
         fc.init();
-        fc.saveUser(new User("uAAA", "Teszt Elek", "teszt@teszt.hu", "HU"));
-        fc.readUser("u001", new FirestoreDataHandler.UserCallback() {
+        fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
+        fc.readUser(uu, new FirestoreDataHandler.UserCallback() {
             @Override
             public void onAnswerReceived(User user) {
                 Log.d("FIRESTORE", user.toString());
