@@ -14,6 +14,11 @@ import com.bumptech.glide.Glide;
 
 import hu.matusz.travelapp.util.database.models.User;
 
+/**
+ * Just a prototype
+ * @author Matusz
+ * @version v0.1
+ */
 public class UserActivity extends AppCompatActivity {
     private User user;
     @Override
