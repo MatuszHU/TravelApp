@@ -4,11 +4,9 @@ public class GeoLocation {
     private double coordX;
     private double coordY;
     private String POI_name;
-    private String geoId;  // String típusúra változtattuk
-
-    // Üres konstruktor Firebase-hez
+    private String geoId;
     public GeoLocation() {
-        // Szükséges a Firebase-hez
+
     }
 
     public GeoLocation(double coordX, double coordY, String POI_name, String geoId) {

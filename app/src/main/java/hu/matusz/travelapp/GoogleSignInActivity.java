@@ -27,8 +27,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
-import org.jetbrains.annotations.TestOnly;
-
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -70,7 +68,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
         String uu = u.getUUID();
         fc.init();
         //fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
-        fc.readUser(uu, new FirestoreDataHandler.Callback<User>() {
+        fc.getUser(uu, new FirestoreDataHandler.Callback<User>() {
             @Override
             public void onAnswerReceived(User user) {
                 Log.d("FIRESTORE", user.toString());
@@ -82,7 +80,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
             }
         });
         fc.saveComment(new Comment(uu, u.getUUID(), "Teszt", "This is a test comment", 6, u.getUUID()));
-        fc.readAllComment(new FirestoreDataHandler.Callback<List<Comment>>() {
+        fc.getAllComment(new FirestoreDataHandler.Callback<List<Comment>>() {
             @Override
             public void onAnswerReceived(List<Comment> result) {
                 for (int i = 0; i < result.size(); i++) {

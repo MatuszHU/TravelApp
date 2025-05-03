@@ -93,7 +93,7 @@ public class FirestoreDataHandler{
      * @see User
      */
 
-    public void readUser(String userId, Callback<User> callback) {
+    public void getUser(String userId, Callback<User> callback) {
         firestore.collection("users")
                 .whereEqualTo("id", userId)
                 .get()
@@ -182,7 +182,7 @@ public class FirestoreDataHandler{
 
                                 callback.onAnswerReceived(targetComment);
                             } else {
-                                callback.onError(new Exception("User not found"));
+                                callback.onError(new Exception("Comment not found"));
                             }
                         } else {
                             Log.w("FIRESTORE", "Error getting documents.", task.getException());
@@ -192,7 +192,7 @@ public class FirestoreDataHandler{
                 });
 
     }
-    public void readAllComment(Callback<List<Comment>> callback)
+    public void getAllComment(Callback<List<Comment>> callback)
     {
         firestore.collection("comments")
                 .get()
@@ -215,6 +215,71 @@ public class FirestoreDataHandler{
                             }
                             callback.onAnswerReceived(store);
                         } else {
+                            callback.onError(task.getException());
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Saves Location pin to <i style="color: red">Firestore</i>
+     * @author Matusz
+     * @version v1
+     * @param geo a non-null <b>GeoLocation</b>.
+     * @see GeoLocation
+     */
+    public void saveLocation(@NonNull GeoLocation geo){
+        Map<String, String> locationMap = new HashMap<>();
+        locationMap.put("geoId",geo.getGeoId());
+        locationMap.put("name",geo.getPOI_name());
+        locationMap.put("x",geo.getCoordX()+"");
+        locationMap.put("y",geo.getCoordY()+"");
+
+        firestore.collection("locations").add(locationMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                Log.d("FIRESTORE","Sikeres mentés az adatbázisba ezzel az ID-vel: "+ documentReference.getId()+"\t Firestore: "+ documentReference.getFirestore());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.w("FIRESTORE", "Kritikus hiba:\t", e);
+            }
+        });
+    }
+
+    /**
+     * Search and read a specific location from <i style="color: red">Firestore</i>.
+     * @author Matusz
+     * @version v1
+     * @param locationId Primary identifer for <i>comment</i>
+     * @param callback Interface separeting the cloud function from the main thread.
+     * @see GeoLocation
+     */
+    public void getLocation(String locationId, Callback<GeoLocation> callback) {
+        firestore.collection("locations")
+                .whereEqualTo("id", locationId)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            if (!task.getResult().isEmpty()) {
+                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+                                Map<String, Object> locationData = document.getData();
+
+                                GeoLocation targetLocation = new GeoLocation();
+                                targetLocation.setGeoId((String) locationData.get("geoId"));
+                                targetLocation.setPOI_name((String) locationData.get("name"));
+                                targetLocation.setCoordX(Double.parseDouble((String) locationData.get("x")));
+                                targetLocation.setCoordY(Double.parseDouble((String) locationData.get("y")));
+
+                                callback.onAnswerReceived(targetLocation);
+                            } else {
+                                callback.onError(new Exception("Location not found"));
+                            }
+                        } else {
+                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
                             callback.onError(task.getException());
                         }
                     }
