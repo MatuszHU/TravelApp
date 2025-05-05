@@ -20,10 +20,6 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity {
     private SignInButton signInButton;
-
-
-
-    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,16 +49,15 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
     }
 
 
     public void signOut() {
+
         FirebaseAuth.getInstance().signOut();
     }
 
-    private void updateUI(@Nullable FirebaseUser user) {
+    private void updateUI(FirebaseUser user) {
 
     }
 }

@@ -51,23 +51,58 @@ public class GoogleSignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAuth = FirebaseAuth.getInstance();
         setContentView(R.layout.login_activity);
-        credentialManager = CredentialManager.create(getBaseContext());
-        containerLayout = findViewById(R.id.containerLayout);
-        launchCredentialManager();
+
+        // Inicializálás MINDIG kell
+        mAuth = FirebaseAuth.getInstance();
         fc = new FirestoreDataHandler();
         fc.init();
+        u = new UUIDGen();
+        credentialManager = CredentialManager.create(getBaseContext());
+        containerLayout = findViewById(R.id.containerLayout);
         sla = new SimpleLoadingAnimation(findViewById(R.id.loadingImage));
         sla.startVariableSpeedRotation();
 
-        //+ Button button = findViewById(R.id.button);
+        FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        //+button.setOnClickListener(v -> {
-            //+ Testing firestoreTest();
-        //+});
+        if (currentUser != null) {
+
+            fetchUserAndContinue(currentUser);
+        } else {
+
+            launchCredentialManager();
+        }
     }
-    ///Experimental animation
+
+    private void fetchUserAndContinue(FirebaseUser user) {
+        fc = new FirestoreDataHandler();
+        fc.init();
+        u = new UUIDGen();
+
+        fc.getUserByEmail(user.getEmail(), new Callback<User>() {
+            @Override
+            public void onAnswerReceived(User result) {
+                if (result != null) {
+                    localUser = result;
+                } else {
+                    localUser = new User();
+                    localUser.setUserId(u.getUUID());
+                    localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : "");
+                    localUser.setName(user.getDisplayName());
+                    localUser.setCountryOfOriginCode("");
+                    localUser.setEmail(user.getEmail());
+                    fc.saveUser(localUser);
+                }
+
+                updateUI(user);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(GOOGLESIGNINLOGTAG, "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+            }
+        });
+    }
 
 
 

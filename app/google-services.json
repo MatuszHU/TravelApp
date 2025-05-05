@@ -36,8 +36,15 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+              "client_id": "853429563864-lqr75se268n3nr3e8a5av1rqkbgn3aae.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "853429563864-9f18nmplalia3dd1kq8kfn13p4ek2m8i.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "hu.matusz.TravelAppios"
+              }
             }
           ]
         }

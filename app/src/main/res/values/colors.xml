@@ -3,4 +3,29 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="background_red">#C03F4A</color>
+    <color name="colorPrimary">#C03F4A</color>
+    <color name="colorPrimaryVariant">#8A2B34</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorOnBackground">#000000</color>
+
+    <color name="colorSurface">#F5F5F5</color>
+    <color name="colorOnSurface">#000000</color>
+
+    <color name="colorSecondary">#FFB4A9</color>
+    <color name="colorOnSecondary">#000000</color>
+
+    <color name="colorPrimaryD">#C03F4A</color>
+    <color name="colorPrimaryVariantD">#FF6B70</color>
+    <color name="colorOnPrimaryD">#FFFFFF</color>
+
+    <color name="colorBackgroundD">#121212</color>
+    <color name="colorOnBackgroundD">#FFFFFF</color>
+
+    <color name="colorSurfaceD">#1E1E1E</color>
+    <color name="colorOnSurfaceD">#FFFFFF</color>
+
+    <color name="colorSecondaryD">#FF8A80</color>
+    <color name="colorOnSecondaryD">#000000</color>
 </resources>

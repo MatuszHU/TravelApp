@@ -5,8 +5,7 @@
     android:id="@+id/user_page"
     android:orientation="vertical"
     android:padding="24dp"
-    android:gravity="center_horizontal"
-    android:background="#FFFFFF">
+    android:gravity="center_horizontal">
 
 
     <ImageView
@@ -42,6 +41,12 @@
         android:layout_height="wrap_content"
         android:text="Country of Origin"
         android:layout_marginBottom="2dp" />
+
+    <Switch
+        android:id="@+id/darkModeSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dark Mode" />
 
     <Button
         android:id="@+id/exit"
