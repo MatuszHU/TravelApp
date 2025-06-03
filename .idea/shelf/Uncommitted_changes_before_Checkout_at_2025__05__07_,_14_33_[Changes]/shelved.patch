@@ -1,0 +1,132 @@
+Index: app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java b/app/src/main/java/hu/matusz/travelapp/util/database/deprecated/DataConnect.java
+rename from app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java
+rename to app/src/main/java/hu/matusz/travelapp/util/database/deprecated/DataConnect.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java	(revision e96392f45234732f01d80e666a253eeb877a0e8b)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/deprecated/DataConnect.java	(date 1746536703318)
+@@ -1,4 +1,4 @@
+-package hu.matusz.travelapp.util.database;
++package hu.matusz.travelapp.util.database.deprecated;
+ 
+ import android.util.Log;
+ 
+Index: app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java b/app/src/main/java/hu/matusz/travelapp/util/database/deprecated/ConnectionManager.java
+rename from app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java
+rename to app/src/main/java/hu/matusz/travelapp/util/database/deprecated/ConnectionManager.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java	(revision e96392f45234732f01d80e666a253eeb877a0e8b)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/deprecated/ConnectionManager.java	(date 1746536703272)
+@@ -1,4 +1,4 @@
+-package hu.matusz.travelapp.util.database;
++package hu.matusz.travelapp.util.database.deprecated;
+ import java.sql.Connection;
+ import java.sql.DriverManager;
+ import java.sql.SQLException;
+Index: app/src/main/java/hu/matusz/travelapp/UserActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp;\n\nimport android.os.Bundle;\nimport android.widget.ImageView;\nimport android.widget.Switch;\nimport android.widget.TextView;\n\nimport androidx.activity.EdgeToEdge;\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.appcompat.app.AppCompatDelegate;\nimport androidx.core.graphics.Insets;\nimport androidx.core.view.ViewCompat;\nimport androidx.core.view.WindowInsetsCompat;\n\nimport com.bumptech.glide.Glide;\n\nimport hu.matusz.travelapp.util.database.models.User;\nimport android.content.SharedPreferences;\n/**\n * Just a prototype\n * @author Matusz\n * @version v0.1\n */\npublic class UserActivity extends AppCompatActivity {\n    private User user;\n    private Switch themeSwitch;\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n\n        SharedPreferences prefs = getSharedPreferences(\"settings\", MODE_PRIVATE);\n\n\n        boolean isDarkMode = prefs.getBoolean(\"dark_mode\", false);\n        AppCompatDelegate.setDefaultNightMode(\n                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO\n        );\n\n\n        super.onCreate(savedInstanceState);\n        EdgeToEdge.enable(this);\n        setContentView(R.layout.activity_user_page);\n        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.user_page), (v, insets) -> {\n            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());\n            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);\n            return insets;\n        });\n\n        ImageView profileImage = findViewById(R.id.profile_image);\n        TextView name = findViewById(R.id.name);\n        TextView email = findViewById(R.id.email);\n        TextView country = findViewById(R.id.country);\n\n        user = (User) getIntent().getSerializableExtra(\"user\");\n        if (user.getPhotoURI() != null && !user.getPhotoURI().isEmpty()) {\n            Glide.with(this).load(user.getPhotoURI()).circleCrop().into(profileImage);\n        }\n\n        name.setText(user.getName());\n        email.setText(user.getEmail());\n        country.setText(user.getCountryOfOriginCode());\n\n        themeSwitch = findViewById(R.id.darkModeSwitch);\n\n        themeSwitch.setOnCheckedChangeListener(null);\n        themeSwitch.setChecked(isDarkMode);\n        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {\n            SharedPreferences.Editor editor = prefs.edit();\n            editor.putBoolean(\"dark_mode\", isChecked);\n            editor.apply();\n\n            AppCompatDelegate.setDefaultNightMode(\n                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO\n            );\n        });\n\n    }\n\n}
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/UserActivity.java b/app/src/main/java/hu/matusz/travelapp/UserActivity.java
+--- a/app/src/main/java/hu/matusz/travelapp/UserActivity.java	(revision e96392f45234732f01d80e666a253eeb877a0e8b)
++++ b/app/src/main/java/hu/matusz/travelapp/UserActivity.java	(date 1746538142146)
+@@ -1,6 +1,9 @@
+ package hu.matusz.travelapp;
+ 
++import android.content.Intent;
+ import android.os.Bundle;
++import android.view.View;
++import android.widget.Button;
+ import android.widget.ImageView;
+ import android.widget.Switch;
+ import android.widget.TextView;
+@@ -23,20 +26,11 @@
+  */
+ public class UserActivity extends AppCompatActivity {
+     private User user;
+-    private Switch themeSwitch;
++    private Button changeCountry;
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+ 
+-        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+-
+-
+-        boolean isDarkMode = prefs.getBoolean("dark_mode", false);
+-        AppCompatDelegate.setDefaultNightMode(
+-                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-        );
+-
+-
+         super.onCreate(savedInstanceState);
+         EdgeToEdge.enable(this);
+         setContentView(R.layout.activity_user_page);
+@@ -59,19 +53,16 @@
+         name.setText(user.getName());
+         email.setText(user.getEmail());
+         country.setText(user.getCountryOfOriginCode());
+-
+-        themeSwitch = findViewById(R.id.darkModeSwitch);
+-
+-        themeSwitch.setOnCheckedChangeListener(null);
+-        themeSwitch.setChecked(isDarkMode);
+-        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+-            SharedPreferences.Editor editor = prefs.edit();
+-            editor.putBoolean("dark_mode", isChecked);
+-            editor.apply();
+-
+-            AppCompatDelegate.setDefaultNightMode(
+-                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-            );
++        changeCountry = findViewById(R.id.countryChange);
++        changeCountry.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                if(user!= null){
++                    Intent loggedInIntent = new Intent(UserActivity.this, ChangeCountryActivity.class);
++                    loggedInIntent.putExtra("user", user);
++                    startActivity(loggedInIntent);
++                }
++            }
+         });
+ 
+     }
+Index: app/src/main/res/layout/activity_user_page.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:id=\"@+id/user_page\"\n    android:orientation=\"vertical\"\n    android:padding=\"24dp\"\n    android:gravity=\"center_horizontal\">\n\n\n    <ImageView\n        android:id=\"@+id/profile_image\"\n        android:layout_width=\"120dp\"\n        android:layout_height=\"120dp\"\n        android:scaleType=\"centerCrop\"\n        android:layout_marginBottom=\"16dp\"\n        android:background=\"@drawable/circle_shape\"\n        android:clipToOutline=\"true\" />\n\n\n    <TextView\n        android:id=\"@+id/name\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Display Name\"\n        android:textSize=\"20sp\"\n        android:textStyle=\"bold\"\n        android:layout_marginBottom=\"4dp\" />\n\n\n    <TextView\n        android:id=\"@+id/email\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Email address\"\n        android:layout_marginBottom=\"2dp\" />\n\n    <TextView\n        android:id=\"@+id/country\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Country of Origin\"\n        android:layout_marginBottom=\"2dp\" />\n\n    <Switch\n        android:id=\"@+id/darkModeSwitch\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Dark Mode\" />\n\n    <Button\n        android:id=\"@+id/exit\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Go back\" />\n\n</LinearLayout>
+===================================================================
+diff --git a/app/src/main/res/layout/activity_user_page.xml b/app/src/main/res/layout/activity_user_page.xml
+--- a/app/src/main/res/layout/activity_user_page.xml	(revision e96392f45234732f01d80e666a253eeb877a0e8b)
++++ b/app/src/main/res/layout/activity_user_page.xml	(date 1746538134503)
+@@ -42,11 +42,11 @@
+         android:text="Country of Origin"
+         android:layout_marginBottom="2dp" />
+ 
+-    <Switch
+-        android:id="@+id/darkModeSwitch"
++    <Button
++        android:id="@+id/countryChange"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+-        android:text="Dark Mode" />
++        android:text="Change Country" />
+ 
+     <Button
+         android:id="@+id/exit"
+Index: app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java b/app/src/main/java/hu/matusz/travelapp/util/database/deprecated/SQLSelect.java
+rename from app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java
+rename to app/src/main/java/hu/matusz/travelapp/util/database/deprecated/SQLSelect.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java	(revision e96392f45234732f01d80e666a253eeb877a0e8b)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/deprecated/SQLSelect.java	(date 1746536703305)
+@@ -1,4 +1,4 @@
+-package hu.matusz.travelapp.util.database;
++package hu.matusz.travelapp.util.database.deprecated;
+ import java.sql.Connection;
+ import java.sql.SQLException;
+ import java.sql.Statement;

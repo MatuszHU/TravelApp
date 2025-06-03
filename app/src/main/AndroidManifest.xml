@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".GoogleSignInActivity" />
-
+        <activity android:name=".MapActivity"/>
     </application>
 
 </manifest>

@@ -1,0 +1,1590 @@
+Index: app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp;\n\nimport static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;\n\nimport android.content.Intent;\nimport android.os.Bundle;\nimport android.os.CancellationSignal;\nimport android.util.Log;\nimport android.widget.LinearLayout;\n\nimport androidx.annotation.NonNull;\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.credentials.ClearCredentialStateRequest;\nimport androidx.credentials.Credential;\nimport androidx.credentials.CredentialManager;\nimport androidx.credentials.CredentialManagerCallback;\nimport androidx.credentials.CustomCredential;\nimport androidx.credentials.GetCredentialRequest;\nimport androidx.credentials.GetCredentialResponse;\nimport androidx.credentials.exceptions.ClearCredentialException;\nimport androidx.credentials.exceptions.GetCredentialException;\nimport com.google.android.libraries.identity.googleid.GetGoogleIdOption;\nimport com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;\nimport com.google.firebase.auth.AuthCredential;\nimport com.google.firebase.auth.FirebaseAuth;\nimport com.google.firebase.auth.FirebaseUser;\nimport com.google.firebase.auth.GoogleAuthProvider;\n\nimport java.io.Serializable;\nimport java.util.List;\nimport java.util.concurrent.Executors;\n\nimport hu.matusz.travelapp.util.UUIDGen;\nimport hu.matusz.travelapp.util.animations.SimpleLoadingAnimation;\nimport hu.matusz.travelapp.util.database.Callback;\nimport hu.matusz.travelapp.util.database.FirestoreDataHandler;\nimport hu.matusz.travelapp.util.database.models.Comment;\nimport hu.matusz.travelapp.util.database.models.User;\n\n\npublic class GoogleSignInActivity extends AppCompatActivity {\n    private FirestoreDataHandler fc;\n    private UUIDGen u = new UUIDGen();\n    public User localUser;\n    private static final String GOOGLESIGNINLOGTAG = \"GoogleLoginInformation\";\n\n    private FirebaseAuth mAuth;\n    private CredentialManager credentialManager;\n    private SimpleLoadingAnimation sla;\n    private  LinearLayout containerLayout;\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        setContentView(R.layout.login_activity);\n\n        // Inicializálás MINDIG kell\n        mAuth = FirebaseAuth.getInstance();\n        fc = new FirestoreDataHandler();\n        fc.init();\n        u = new UUIDGen();\n        credentialManager = CredentialManager.create(getBaseContext());\n        containerLayout = findViewById(R.id.containerLayout);\n        sla = new SimpleLoadingAnimation(findViewById(R.id.loadingImage));\n        sla.startVariableSpeedRotation();\n\n        FirebaseUser currentUser = mAuth.getCurrentUser();\n\n        if (currentUser != null) {\n\n            fetchUserAndContinue(currentUser);\n        } else {\n\n            launchCredentialManager();\n        }\n    }\n\n    private void fetchUserAndContinue(FirebaseUser user) {\n        fc = new FirestoreDataHandler();\n        fc.init();\n        u = new UUIDGen();\n\n        fc.getUserByEmail(user.getEmail(), new Callback<User>() {\n            @Override\n            public void onAnswerReceived(User result) {\n                if (result != null) {\n                    localUser = result;\n                } else {\n                    localUser = new User();\n                    localUser.setUserId(u.getUUID());\n                    localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : \"\");\n                    localUser.setName(user.getDisplayName());\n                    localUser.setCountryOfOriginCode(\"\");\n                    localUser.setEmail(user.getEmail());\n                    fc.saveUser(localUser);\n                }\n\n                updateUI(user);\n            }\n\n            @Override\n            public void onError(Exception e) {\n                Log.e(GOOGLESIGNINLOGTAG, \"Hiba a felhasználó lekérdezésekor: \" + e.getMessage());\n            }\n        });\n    }\n\n\n\n    @Override\n    protected void onDestroy() {\n        super.onDestroy();\n        sla.destroy();\n    }\n\n\n    //+ Testing, no longer in use\n    public void firestoreTest(){\n        FirestoreDataHandler fc = new FirestoreDataHandler();\n        UUIDGen u = new UUIDGen();\n        String uu = u.getUUID();\n        fc.init();\n        //fc.saveUser(new User(uu, \"Teszt Elek\", \"teszt@teszt.hu\", \"HU\"));\n        fc.getUserById(uu, new Callback<User>() {\n            @Override\n            public void onAnswerReceived(User user) {\n                Log.d(\"FIRESTORE\", user.toString());\n            }\n\n            @Override\n            public void onError(Exception e) {\n                Log.e(\"FIRESTORE\", \"Hiba a felhasználó lekérdezésekor: \" + e.getMessage());\n            }\n        });\n        fc.saveComment(new Comment(uu, u.getUUID(), \"Teszt\", \"This is a test comment\", 6, u.getUUID()));\n        fc.getAllComment(new Callback<List<Comment>>() {\n            @Override\n            public void onAnswerReceived(List<Comment> result) {\n                for (int i = 0; i < result.size(); i++) {\n                    Log.d(\"FIRECOMMENT\", \"Comment #\"+(i+1)+\" \"+result.get(i).toString());\n                }\n            }\n\n            @Override\n            public void onError(Exception e) {\n                Log.d(\"FIRECOMMENT\", e.toString());\n            }\n        });\n    }\n    @Override\n    public void onStart() {\n        super.onStart();\n        FirebaseUser currentUser = mAuth.getCurrentUser();\n        updateUI(currentUser);\n    }\n\n    private void launchCredentialManager() {\n        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()\n                .setFilterByAuthorizedAccounts(false)\n                .setServerClientId(getString(R.string.default_web_client_id))\n                .build();\n\n        GetCredentialRequest request = new GetCredentialRequest.Builder()\n                .addCredentialOption(googleIdOption)\n                .build();\n        credentialManager.getCredentialAsync(\n                getBaseContext(),\n                request,\n                new CancellationSignal(),\n                Executors.newSingleThreadExecutor(),\n                new CredentialManagerCallback<>() {\n                    @Override\n                    public void onResult(GetCredentialResponse result) {\n                        handleSignIn(result.getCredential());\n                    }\n\n                    @Override\n                    public void onError(GetCredentialException e) {\n                        Log.e(GOOGLESIGNINLOGTAG, \"Couldn't retrieve user's credentials: \" + e.getLocalizedMessage());\n                        Log.e(GOOGLESIGNINLOGTAG, \"Error Type: \" + e.getClass().getSimpleName());\n                        Log.e(GOOGLESIGNINLOGTAG, \"Localized Message: \" + e.getLocalizedMessage());\n                        Log.e(GOOGLESIGNINLOGTAG, \"Full Exception: \", e);\n                    }\n                }\n        );\n    }\n\n\n    private void handleSignIn(Credential credential) {\n\n        if (credential instanceof CustomCredential customCredential\n                && credential.getType().equals(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {\n            Bundle credentialData = customCredential.getData();\n            GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credentialData);\n\n            firebaseAuthWithGoogle(googleIdTokenCredential.getIdToken());\n        } else {\n            Log.w(GOOGLESIGNINLOGTAG, \"Credential is not of type Google ID!\");\n        }\n    }\n    private void firebaseAuthWithGoogle(String idToken) {\n        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);\n        mAuth.signInWithCredential(credential)\n                .addOnCompleteListener(this, task -> {\n                    if (task.isSuccessful()) {\n\n                        Log.d(GOOGLESIGNINLOGTAG, \"signInWithCredential:success\");\n                        FirebaseUser user = mAuth.getCurrentUser();\n                        fc.getUserByEmail(user.getEmail(), new Callback<User>() {\n                            @Override\n                            public void onAnswerReceived(User result) {\n                                if (result != null && result.getEmail() != null && !result.getEmail().isEmpty()) {\n                                    localUser = result;\n                                }\n\n\n                                Log.d(\"LOGINTEST\", \"firebaseAuthWithGoogle: (success ág)\" + localUser.toString());\n                                updateUI(user);\n                            }\n\n                            @Override\n                            public void onError(Exception e) {\n                                localUser = new User();\n                                localUser.setUserId(u.getUUID());\n                                localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : \"\");\n                                localUser.setName(user.getDisplayName());\n                                localUser.setCountryOfOriginCode(\"\");\n                                localUser.setEmail(user.getEmail());\n                                fc.saveUser(localUser);\n                                Log.d(\"LOGINTEST\", \"firebaseAuthWithGoogle: (error ág)\" + localUser.toString());\n                            }\n                        });\n\n                        updateUI(user);\n                    } else {\n                        Log.w(GOOGLESIGNINLOGTAG, \"signInWithCredential:failure\", task.getException());\n                        updateUI(null);\n                    }\n                });\n    }\n    private void signOut() {\n        mAuth.signOut();\n\n        ClearCredentialStateRequest clearRequest = new ClearCredentialStateRequest();\n        credentialManager.clearCredentialStateAsync(\n                clearRequest,\n                new CancellationSignal(),\n                Executors.newSingleThreadExecutor(),\n                new CredentialManagerCallback<>() {\n                    @Override\n                    public void onResult(@NonNull Void result) {\n                        updateUI(null);\n                    }\n\n                    @Override\n                    public void onError(@NonNull ClearCredentialException e) {\n                        Log.e(GOOGLESIGNINLOGTAG, \"Couldn't clear user credentials: \" + e.getLocalizedMessage());\n                    }\n                });\n    }\n    private void updateUI(FirebaseUser user) {\n        if(localUser!=null){\n            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, UserActivity.class);\n            loggedInIntent.putExtra(\"user\", localUser);\n            sla.destroy();\n            startActivity(loggedInIntent);\n        }\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java b/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java
+--- a/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java	(date 1748950064867)
+@@ -2,11 +2,12 @@
+ 
+ import static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;
+ 
+-import android.content.Intent;
+ import android.os.Bundle;
+ import android.os.CancellationSignal;
+ import android.util.Log;
++import android.widget.Button;
+ import android.widget.LinearLayout;
++import android.widget.TextView;
+ 
+ import androidx.annotation.NonNull;
+ import androidx.appcompat.app.AppCompatActivity;
+@@ -26,101 +27,48 @@
+ import com.google.firebase.auth.FirebaseUser;
+ import com.google.firebase.auth.GoogleAuthProvider;
+ 
+-import java.io.Serializable;
+ import java.util.List;
+ import java.util.concurrent.Executors;
+ 
+ import hu.matusz.travelapp.util.UUIDGen;
+-import hu.matusz.travelapp.util.animations.SimpleLoadingAnimation;
+-import hu.matusz.travelapp.util.database.Callback;
+ import hu.matusz.travelapp.util.database.FirestoreDataHandler;
+ import hu.matusz.travelapp.util.database.models.Comment;
+ import hu.matusz.travelapp.util.database.models.User;
+ 
+ 
+ public class GoogleSignInActivity extends AppCompatActivity {
+-    private FirestoreDataHandler fc;
+-    private UUIDGen u = new UUIDGen();
+-    public User localUser;
++
+     private static final String GOOGLESIGNINLOGTAG = "GoogleLoginInformation";
+ 
+     private FirebaseAuth mAuth;
+     private CredentialManager credentialManager;
+-    private SimpleLoadingAnimation sla;
++
+     private  LinearLayout containerLayout;
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+-        setContentView(R.layout.login_activity);
+-
+-        // Inicializálás MINDIG kell
+         mAuth = FirebaseAuth.getInstance();
+-        fc = new FirestoreDataHandler();
+-        fc.init();
+-        u = new UUIDGen();
++        setContentView(R.layout.login_activity);
+         credentialManager = CredentialManager.create(getBaseContext());
+         containerLayout = findViewById(R.id.containerLayout);
+-        sla = new SimpleLoadingAnimation(findViewById(R.id.loadingImage));
+-        sla.startVariableSpeedRotation();
+-
+-        FirebaseUser currentUser = mAuth.getCurrentUser();
+-
+-        if (currentUser != null) {
+-
+-            fetchUserAndContinue(currentUser);
+-        } else {
+-
+-            launchCredentialManager();
+-        }
+-    }
+-
+-    private void fetchUserAndContinue(FirebaseUser user) {
+-        fc = new FirestoreDataHandler();
+-        fc.init();
+-        u = new UUIDGen();
++        launchCredentialManager();
+ 
+-        fc.getUserByEmail(user.getEmail(), new Callback<User>() {
+-            @Override
+-            public void onAnswerReceived(User result) {
+-                if (result != null) {
+-                    localUser = result;
+-                } else {
+-                    localUser = new User();
+-                    localUser.setUserId(u.getUUID());
+-                    localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : "");
+-                    localUser.setName(user.getDisplayName());
+-                    localUser.setCountryOfOriginCode("");
+-                    localUser.setEmail(user.getEmail());
+-                    fc.saveUser(localUser);
+-                }
+ 
+-                updateUI(user);
+-            }
++        Button button = findViewById(R.id.button);
+ 
+-            @Override
+-            public void onError(Exception e) {
+-                Log.e(GOOGLESIGNINLOGTAG, "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+-            }
++        button.setOnClickListener(v -> {
++            firestoreTest();
+         });
+     }
+ 
+-
+-
+-    @Override
+-    protected void onDestroy() {
+-        super.onDestroy();
+-        sla.destroy();
+-    }
+-
+-
+-    //+ Testing, no longer in use
++    //* Testing
+     public void firestoreTest(){
+         FirestoreDataHandler fc = new FirestoreDataHandler();
+         UUIDGen u = new UUIDGen();
+         String uu = u.getUUID();
+         fc.init();
+         //fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
+-        fc.getUserById(uu, new Callback<User>() {
++        fc.getUser(uu, new FirestoreDataHandler.Callback<User>() {
+             @Override
+             public void onAnswerReceived(User user) {
+                 Log.d("FIRESTORE", user.toString());
+@@ -132,7 +80,7 @@
+             }
+         });
+         fc.saveComment(new Comment(uu, u.getUUID(), "Teszt", "This is a test comment", 6, u.getUUID()));
+-        fc.getAllComment(new Callback<List<Comment>>() {
++        fc.getAllComment(new FirestoreDataHandler.Callback<List<Comment>>() {
+             @Override
+             public void onAnswerReceived(List<Comment> result) {
+                 for (int i = 0; i < result.size(); i++) {
+@@ -205,31 +153,6 @@
+ 
+                         Log.d(GOOGLESIGNINLOGTAG, "signInWithCredential:success");
+                         FirebaseUser user = mAuth.getCurrentUser();
+-                        fc.getUserByEmail(user.getEmail(), new Callback<User>() {
+-                            @Override
+-                            public void onAnswerReceived(User result) {
+-                                if (result != null && result.getEmail() != null && !result.getEmail().isEmpty()) {
+-                                    localUser = result;
+-                                }
+-
+-
+-                                Log.d("LOGINTEST", "firebaseAuthWithGoogle: (success ág)" + localUser.toString());
+-                                updateUI(user);
+-                            }
+-
+-                            @Override
+-                            public void onError(Exception e) {
+-                                localUser = new User();
+-                                localUser.setUserId(u.getUUID());
+-                                localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : "");
+-                                localUser.setName(user.getDisplayName());
+-                                localUser.setCountryOfOriginCode("");
+-                                localUser.setEmail(user.getEmail());
+-                                fc.saveUser(localUser);
+-                                Log.d("LOGINTEST", "firebaseAuthWithGoogle: (error ág)" + localUser.toString());
+-                            }
+-                        });
+-
+                         updateUI(user);
+                     } else {
+                         Log.w(GOOGLESIGNINLOGTAG, "signInWithCredential:failure", task.getException());
+@@ -258,11 +181,13 @@
+                 });
+     }
+     private void updateUI(FirebaseUser user) {
+-        if(localUser!=null){
+-            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, UserActivity.class);
+-            loggedInIntent.putExtra("user", localUser);
+-            sla.destroy();
+-            startActivity(loggedInIntent);
+-        }
++        //? TEST TEXT
++        TextView newTextView = new TextView(this);
++        newTextView.setText("Új elem");
++        newTextView.setTextSize(18);
++        newTextView.setPadding(0, 10, 0, 10);
++
++        containerLayout.addView(newTextView);
++
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\">\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\n        android:fullBackupContent=\"@xml/backup_rules\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.TravelApp\"\n        tools:targetApi=\"31\">\n        <activity\n            android:name=\".UserActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity android:name=\".GoogleSignInActivity\" />\n\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/AndroidManifest.xml	(date 1748950063770)
+@@ -2,9 +2,9 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools">
+ 
+-    <uses-permission android:name="android.permission.INTERNET" />
+-
++    <uses-permission android:name="android.permission.INTERNET"/>
+     <application
++
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+         android:fullBackupContent="@xml/backup_rules"
+@@ -15,9 +15,6 @@
+         android:theme="@style/Theme.TravelApp"
+         tools:targetApi="31">
+         <activity
+-            android:name=".UserActivity"
+-            android:exported="false" />
+-        <activity
+             android:name=".MainActivity"
+             android:exported="true">
+             <intent-filter>
+@@ -27,7 +24,6 @@
+             </intent-filter>
+         </activity>
+         <activity android:name=".GoogleSignInActivity" />
+-
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp;\n\nimport org.osmdroid.api.IMapController;\nimport org.osmdroid.config.Configuration;\nimport org.osmdroid.events.MapEventsReceiver;\nimport org.osmdroid.tileprovider.tilesource.TileSourceFactory;\nimport org.osmdroid.util.GeoPoint;\nimport org.osmdroid.views.MapView;\nimport org.osmdroid.views.overlay.MapEventsOverlay;\nimport org.osmdroid.views.overlay.Marker;\n\nimport android.content.Context;\nimport android.content.SharedPreferences;\nimport android.os.Bundle;\nimport android.util.Log;\nimport android.view.View;\nimport android.widget.Button;\nimport android.widget.ImageButton;\nimport android.widget.LinearLayout;\nimport android.widget.TextView;\n\nimport androidx.appcompat.app.AlertDialog;\nimport androidx.appcompat.app.AppCompatActivity;\n\nimport java.io.File;\n\nimport hu.matusz.travelapp.classes.CustomMarker;\nimport hu.matusz.travelapp.utils.InfoPanelAnimator;\n\npublic class MainActivity extends AppCompatActivity {\n    private static final String TAG = \"MainActivity\";\n\n    private MapView map;\n    private LinearLayout infoPanel;\n    private TextView pinTitle;\n    private ImageButton closePanelButton;\n    private Button deletePinButton;\n    private Marker selectedMarker = null;\n\n    // only for development\n    private int markerCounter = 0;\n\n    /**\n     * Creates a osm map\n     * @param savedInstanceState If the activity is being re-initialized after\n     *     previously being shut down then this Bundle contains the data it most\n     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>\n     *\n     */\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n\n        Context ctx = getApplicationContext();\n\n        // Setup internal tile cache (no permissions needed)\n        File osmdroidBasePath = new File(ctx.getFilesDir(), \"osmdroid\");\n        if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();\n        Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);\n        Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, \"tiles\"));\n\n        // Load preferences using AndroidX\n        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);\n        Configuration.getInstance().load(ctx, prefs);\n\n        // Set layout\n        setContentView(R.layout.activity_map);\n\n        // Initialize the MapView\n        map = findViewById(R.id.map);\n        map.setTileSource(TileSourceFactory.MAPNIK);\n        map.setTilesScaledToDpi(true);\n        map.setBuiltInZoomControls(true);\n        map.setMultiTouchControls(true);\n\n        // Initialize views\n        infoPanel = findViewById(R.id.info_panel);\n        pinTitle = findViewById(R.id.pin_title);\n        closePanelButton = findViewById(R.id.close_panel_button);\n        deletePinButton = findViewById(R.id.delete_pin_button);\n\n        // closes infoPanel\n        closePanelButton.setOnClickListener(v -> {\n            closeInfoPanel();\n            selectedMarker = null;\n        });\n\n        // configure delete button\n        deletePinButton.setOnClickListener(v -> {\n            if (selectedMarker != null) {\n\n                // Alerts before deleting\n                new AlertDialog.Builder(map.getContext())\n                        .setTitle(\"Remove pin\")\n                        .setMessage(\"Do you want to remove the pin \\\"\" + selectedMarker.getTitle() + \"\\\" ?\")\n                        .setPositiveButton(\"Remove\", (dialog, which) -> {\n                            map.getOverlays().remove(selectedMarker);\n                            closeInfoPanel();\n                            selectedMarker = null;\n                            map.invalidate();\n                        })\n                        .setNegativeButton(\"Cancel\", null)\n                        .show();\n            }\n        });\n\n        // Add event listener to detect map taps\n        map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {\n            @Override\n            public boolean singleTapConfirmedHelper(GeoPoint p) {\n                // Add marker at tapped location\n                addMarkerAt(p);\n                return true;\n            }\n\n            @Override\n            public boolean longPressHelper(GeoPoint p) {\n                return false;\n            }\n        }));\n\n        // Center map on given location\n        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate\n        IMapController mapController = map.getController();\n        mapController.setZoom(19);\n        mapController.setCenter(startPoint);\n\n        // Add marker\n        Marker startMarker = new Marker(map);\n        startMarker.setPosition(startPoint);\n        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);\n        startMarker.setTitle(\"Get doxed lol\");\n        map.getOverlays().add(startMarker);\n\n        // refresh view\n        map.invalidate();\n    }\n\n    /**\n     * Adds a marker at a given point\n     * @param point Location where marker should be added\n     */\n    private void addMarkerAt(GeoPoint point) {\n        CustomMarker marker = new CustomMarker(map, point);\n        marker.setTitle(\"New Pin \" + markerCounter);\n        selectedMarker = marker;\n        markerCounter++;\n\n        // defines behavior of pins when clicked\n        marker.setOnMarkerClickListener((m, mapView) -> {\n            if(m.equals((selectedMarker)))\n                return true;\n\n            selectedMarker = m;\n            openInfoPanel(m);\n\n            return true;\n        });\n\n        map.getOverlays().add(marker);\n        openInfoPanel(marker);\n        map.invalidate();\n    }\n\n    /**\n     * Opens the info panel to the given marker\n     * @param marker The marker to which the info panel should be shown\n     */\n    private void openInfoPanel(Marker marker) {\n        pinTitle.setText(marker.getTitle());\n        if (!(infoPanel.getVisibility() == View.VISIBLE))\n            InfoPanelAnimator.showPanel(infoPanel);\n    }\n\n    /**\n     * Closes info panel\n     */\n    private void closeInfoPanel() {\n        InfoPanelAnimator.hidePanel(infoPanel);\n    }\n\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/MainActivity.java b/app/src/main/java/hu/matusz/travelapp/MainActivity.java
+--- a/app/src/main/java/hu/matusz/travelapp/MainActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/MainActivity.java	(date 1748950066046)
+@@ -1,182 +1,66 @@
+ package hu.matusz.travelapp;
+ 
+-import org.osmdroid.api.IMapController;
+-import org.osmdroid.config.Configuration;
+-import org.osmdroid.events.MapEventsReceiver;
+-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+-import org.osmdroid.util.GeoPoint;
+-import org.osmdroid.views.MapView;
+-import org.osmdroid.views.overlay.MapEventsOverlay;
+-import org.osmdroid.views.overlay.Marker;
+-
+-import android.content.Context;
+-import android.content.SharedPreferences;
++import android.content.Intent;
+ import android.os.Bundle;
+-import android.util.Log;
+-import android.view.View;
+-import android.widget.Button;
+-import android.widget.ImageButton;
+-import android.widget.LinearLayout;
+-import android.widget.TextView;
+ 
+-import androidx.appcompat.app.AlertDialog;
++import androidx.activity.EdgeToEdge;
++import androidx.annotation.Nullable;
+ import androidx.appcompat.app.AppCompatActivity;
++import androidx.core.graphics.Insets;
++import androidx.core.view.ViewCompat;
++import androidx.core.view.WindowInsetsCompat;
+ 
+-import java.io.File;
++import com.google.firebase.FirebaseApp;
++import com.google.firebase.auth.FirebaseUser;
++import com.google.firebase.auth.FirebaseAuth;
++import com.google.android.gms.common.SignInButton;
++import com.google.firebase.database.FirebaseDatabase;
+ 
+-import hu.matusz.travelapp.classes.CustomMarker;
+-import hu.matusz.travelapp.utils.InfoPanelAnimator;
+ 
+ public class MainActivity extends AppCompatActivity {
+-    private static final String TAG = "MainActivity";
++    private SignInButton signInButton;
+ 
+-    private MapView map;
+-    private LinearLayout infoPanel;
+-    private TextView pinTitle;
+-    private ImageButton closePanelButton;
+-    private Button deletePinButton;
+-    private Marker selectedMarker = null;
+ 
+-    // only for development
+-    private int markerCounter = 0;
+ 
+-    /**
+-     * Creates a osm map
+-     * @param savedInstanceState If the activity is being re-initialized after
+-     *     previously being shut down then this Bundle contains the data it most
+-     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+-     *
+-     */
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+-
+-        Context ctx = getApplicationContext();
+-
+-        // Setup internal tile cache (no permissions needed)
+-        File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
+-        if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
+-        Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);
+-        Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, "tiles"));
+-
+-        // Load preferences using AndroidX
+-        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
+-        Configuration.getInstance().load(ctx, prefs);
+-
+-        // Set layout
+-        setContentView(R.layout.activity_map);
++        FirebaseApp.initializeApp(this);
++        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
++        EdgeToEdge.enable(this);
++        setContentView(R.layout.activity_main);
++        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
++            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
++            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
++            return insets;
++        });
+ 
+-        // Initialize the MapView
+-        map = findViewById(R.id.map);
+-        map.setTileSource(TileSourceFactory.MAPNIK);
+-        map.setTilesScaledToDpi(true);
+-        map.setBuiltInZoomControls(true);
+-        map.setMultiTouchControls(true);
++        signInButton = findViewById(R.id.sign_in_button);
+ 
+-        // Initialize views
+-        infoPanel = findViewById(R.id.info_panel);
+-        pinTitle = findViewById(R.id.pin_title);
+-        closePanelButton = findViewById(R.id.close_panel_button);
+-        deletePinButton = findViewById(R.id.delete_pin_button);
++        signInButton.setSize(SignInButton.SIZE_WIDE);
+ 
+-        // closes infoPanel
+-        closePanelButton.setOnClickListener(v -> {
+-            closeInfoPanel();
+-            selectedMarker = null;
++        signInButton.setOnClickListener(v -> {
++            Intent intent = new Intent(MainActivity.this, GoogleSignInActivity.class);
++            startActivity(intent);
+         });
+ 
+-        // configure delete button
+-        deletePinButton.setOnClickListener(v -> {
+-            if (selectedMarker != null) {
+-
+-                // Alerts before deleting
+-                new AlertDialog.Builder(map.getContext())
+-                        .setTitle("Remove pin")
+-                        .setMessage("Do you want to remove the pin \"" + selectedMarker.getTitle() + "\" ?")
+-                        .setPositiveButton("Remove", (dialog, which) -> {
+-                            map.getOverlays().remove(selectedMarker);
+-                            closeInfoPanel();
+-                            selectedMarker = null;
+-                            map.invalidate();
+-                        })
+-                        .setNegativeButton("Cancel", null)
+-                        .show();
+-            }
+-        });
++        /*SQLSelect statement = new SQLSelect();
++        Note: Using backticks (`) is not necessary, but highly recommended by the developers.
++        ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
++        Log.d("SQLLog", dataSet.toString());*/
+ 
+-        // Add event listener to detect map taps
+-        map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
+-            @Override
+-            public boolean singleTapConfirmedHelper(GeoPoint p) {
+-                // Add marker at tapped location
+-                addMarkerAt(p);
+-                return true;
+-            }
+ 
+-            @Override
+-            public boolean longPressHelper(GeoPoint p) {
+-                return false;
+-            }
+-        }));
+ 
+-        // Center map on given location
+-        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
+-        IMapController mapController = map.getController();
+-        mapController.setZoom(19);
+-        mapController.setCenter(startPoint);
+ 
+-        // Add marker
+-        Marker startMarker = new Marker(map);
+-        startMarker.setPosition(startPoint);
+-        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+-        startMarker.setTitle("Get doxed lol");
+-        map.getOverlays().add(startMarker);
+ 
+-        // refresh view
+-        map.invalidate();
+     }
+ 
+-    /**
+-     * Adds a marker at a given point
+-     * @param point Location where marker should be added
+-     */
+-    private void addMarkerAt(GeoPoint point) {
+-        CustomMarker marker = new CustomMarker(map, point);
+-        marker.setTitle("New Pin " + markerCounter);
+-        selectedMarker = marker;
+-        markerCounter++;
+-
+-        // defines behavior of pins when clicked
+-        marker.setOnMarkerClickListener((m, mapView) -> {
+-            if(m.equals((selectedMarker)))
+-                return true;
+-
+-            selectedMarker = m;
+-            openInfoPanel(m);
+-
+-            return true;
+-        });
+ 
+-        map.getOverlays().add(marker);
+-        openInfoPanel(marker);
+-        map.invalidate();
++    public void signOut() {
++        FirebaseAuth.getInstance().signOut();
+     }
+ 
+-    /**
+-     * Opens the info panel to the given marker
+-     * @param marker The marker to which the info panel should be shown
+-     */
+-    private void openInfoPanel(Marker marker) {
+-        pinTitle.setText(marker.getTitle());
+-        if (!(infoPanel.getVisibility() == View.VISIBLE))
+-            InfoPanelAnimator.showPanel(infoPanel);
+-    }
++    private void updateUI(@Nullable FirebaseUser user) {
+ 
+-    /**
+-     * Closes info panel
+-     */
+-    private void closeInfoPanel() {
+-        InfoPanelAnimator.hidePanel(infoPanel);
+     }
+-
+ }
+\ No newline at end of file
+Index: app/src/main/res/drawable/circle_shape.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/circle_shape.xml b/app/src/main/res/drawable/circle_shape.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/circle_shape.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,4 +0,0 @@
+-<shape xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:shape="oval">
+-    <solid android:color="#CCCCCC" />
+-</shape>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/UserActivity.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/UserActivity.java b/app/src/main/java/hu/matusz/travelapp/UserActivity.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/UserActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,79 +0,0 @@
+-package hu.matusz.travelapp;
+-
+-import android.os.Bundle;
+-import android.widget.ImageView;
+-import android.widget.Switch;
+-import android.widget.TextView;
+-
+-import androidx.activity.EdgeToEdge;
+-import androidx.appcompat.app.AppCompatActivity;
+-import androidx.appcompat.app.AppCompatDelegate;
+-import androidx.core.graphics.Insets;
+-import androidx.core.view.ViewCompat;
+-import androidx.core.view.WindowInsetsCompat;
+-
+-import com.bumptech.glide.Glide;
+-
+-import hu.matusz.travelapp.util.database.models.User;
+-import android.content.SharedPreferences;
+-/**
+- * Just a prototype
+- * @author Matusz
+- * @version v0.1
+- */
+-public class UserActivity extends AppCompatActivity {
+-    private User user;
+-    private Switch themeSwitch;
+-
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-
+-        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+-
+-
+-        boolean isDarkMode = prefs.getBoolean("dark_mode", false);
+-        AppCompatDelegate.setDefaultNightMode(
+-                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-        );
+-
+-
+-        super.onCreate(savedInstanceState);
+-        EdgeToEdge.enable(this);
+-        setContentView(R.layout.activity_user_page);
+-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.user_page), (v, insets) -> {
+-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+-            return insets;
+-        });
+-
+-        ImageView profileImage = findViewById(R.id.profile_image);
+-        TextView name = findViewById(R.id.name);
+-        TextView email = findViewById(R.id.email);
+-        TextView country = findViewById(R.id.country);
+-
+-        user = (User) getIntent().getSerializableExtra("user");
+-        if (user.getPhotoURI() != null && !user.getPhotoURI().isEmpty()) {
+-            Glide.with(this).load(user.getPhotoURI()).circleCrop().into(profileImage);
+-        }
+-
+-        name.setText(user.getName());
+-        email.setText(user.getEmail());
+-        country.setText(user.getCountryOfOriginCode());
+-
+-        themeSwitch = findViewById(R.id.darkModeSwitch);
+-
+-        themeSwitch.setOnCheckedChangeListener(null);
+-        themeSwitch.setChecked(isDarkMode);
+-        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+-            SharedPreferences.Editor editor = prefs.edit();
+-            editor.putBoolean("dark_mode", isChecked);
+-            editor.apply();
+-
+-            AppCompatDelegate.setDefaultNightMode(
+-                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-            );
+-        });
+-
+-    }
+-
+-}
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/Callback.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java b/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,6 +0,0 @@
+-package hu.matusz.travelapp.util.database;
+-
+-public interface Callback<T> {
+-    void onAnswerReceived(T result);
+-    void onError(Exception e);
+-}
+Index: app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java b/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,51 +0,0 @@
+-package hu.matusz.travelapp.utils;
+-
+-import android.view.View;
+-import android.view.animation.TranslateAnimation;
+-
+-/**
+- * Supplies slide up animation for the info panel
+- */
+-public class InfoPanelAnimator {
+-
+-    /**
+-     * Shows the panel
+-     * @param panel Given view
+-     */
+-    public static void showPanel(View panel) {
+-        panel.setVisibility(View.VISIBLE);
+-        panel.bringToFront();
+-        TranslateAnimation animate = new TranslateAnimation(
+-                0, 0, panel.getHeight(), 0); // From bottom up
+-        animate.setDuration(300);
+-        animate.setFillAfter(true);
+-        panel.startAnimation(animate);
+-    }
+-
+-    /**
+-     * Hides panel
+-     * @param panel Given view
+-     */
+-    public static void hidePanel(View panel) {
+-        TranslateAnimation animate = new TranslateAnimation(
+-                0, 0, 0, panel.getHeight()); // From up to bottom
+-        animate.setDuration(300);
+-        animate.setFillAfter(true);
+-        panel.startAnimation(animate);
+-
+-        // Hide after animation
+-        animate.setAnimationListener(new android.view.animation.Animation.AnimationListener() {
+-            @Override
+-            public void onAnimationStart(android.view.animation.Animation animation) {}
+-
+-            @Override
+-            public void onAnimationEnd(android.view.animation.Animation animation) {
+-                panel.setVisibility(View.GONE);
+-            }
+-
+-            @Override
+-            public void onAnimationRepeat(android.view.animation.Animation animation) {}
+-        });
+-    }
+-}
+-
+Index: app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java b/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,35 +0,0 @@
+-package hu.matusz.travelapp.classes;
+-
+-import android.graphics.drawable.Drawable;
+-
+-import androidx.core.content.ContextCompat;
+-
+-import org.osmdroid.util.GeoPoint;
+-import org.osmdroid.views.MapView;
+-import org.osmdroid.views.overlay.Marker;
+-
+-import hu.matusz.travelapp.MainActivity;
+-import hu.matusz.travelapp.R;
+-
+-/**
+- * Custom marker
+- */
+-public class CustomMarker extends Marker {
+-
+-    /**
+-     * Constructor
+-     * @param mapView view on which marker is
+-     * @param point location where marker should be added
+-     */
+-    public CustomMarker(MapView mapView, GeoPoint point) {
+-        super(mapView);
+-        setPosition(point);
+-
+-        // Sets marker icon
+-        Drawable customIcon = ContextCompat.getDrawable(mapView.getContext(), R.drawable.drawing_pin);
+-        if (customIcon != null) {
+-            customIcon.setBounds(0 ,0, customIcon.getIntrinsicWidth() / 10, customIcon.getIntrinsicHeight() / 10);
+-            setIcon(customIcon);
+-        }
+-    }
+-}
+Index: app/src/main/res/drawable/drawing_pin.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/drawing_pin.xml b/app/src/main/res/drawable/drawing_pin.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/drawing_pin.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,112 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:aapt="http://schemas.android.com/aapt"
+-    android:width="60dp"
+-    android:height="60dp"
+-    android:viewportWidth="150"
+-    android:viewportHeight="150">
+-  <path
+-      android:pathData="m88.74,40.9 l-80.15,98.85 101.3,-77.21z">
+-    <aapt:attr name="android:fillColor">
+-      <gradient 
+-          android:startX="3.7"
+-          android:startY="37.48"
+-          android:endX="61.73"
+-          android:endY="111.24"
+-          android:type="linear">
+-        <item android:offset="0" android:color="#FF999999"/>
+-        <item android:offset="0.39" android:color="#FFE6E6E6"/>
+-        <item android:offset="0.56" android:color="#FF989898"/>
+-        <item android:offset="0.72" android:color="#FF333333"/>
+-        <item android:offset="1" android:color="#FF999999"/>
+-      </gradient>
+-    </aapt:attr>
+-  </path>
+-  <path
+-      android:pathData="m88.74,40.9 l-80.15,98.85 101.3,-77.21z"
+-      android:strokeAlpha="0.85202"
+-      android:fillAlpha="0.85202">
+-    <aapt:attr name="android:fillColor">
+-      <gradient 
+-          android:startX="270.73"
+-          android:startY="-122.76"
+-          android:endX="281.34"
+-          android:endY="-112.15"
+-          android:tileMode="mirror"
+-          android:type="linear">
+-        <item android:offset="0" android:color="#FFF9F9F9"/>
+-        <item android:offset="1" android:color="#00FFFFFF"/>
+-      </gradient>
+-    </aapt:attr>
+-  </path>
+-  <path
+-      android:pathData="m95.94,114.93c-8.83,8.83 -29.38,2.6 -45.9,-13.93s-22.76,-37.07 -13.93,-45.9 29.38,-2.6 45.9,13.93 22.76,37.07 13.93,45.9z"
+-      android:fillType="evenOdd">
+-    <aapt:attr name="android:fillColor">
+-      <gradient 
+-          android:centerX="66.02"
+-          android:centerY="85.02"
+-          android:gradientRadius="42.3"
+-          android:type="radial">
+-        <item android:offset="0" android:color="#FF800000"/>
+-        <item android:offset="0.54" android:color="#FFFF0000"/>
+-        <item android:offset="1" android:color="#FFFF5555"/>
+-      </gradient>
+-    </aapt:attr>
+-  </path>
+-  <path
+-      android:pathData="m139.62,55.09c-5.9,5.9 -20.24,1.12 -32.04,-10.68s-16.58,-26.14 -10.68,-32.04 20.24,-1.12 32.04,10.68 16.58,26.14 10.68,32.04z"
+-      android:fillType="evenOdd">
+-    <aapt:attr name="android:fillColor">
+-      <gradient 
+-          android:startX="102.37"
+-          android:startY="-25.95"
+-          android:endX="127.61"
+-          android:endY="64.97"
+-          android:type="linear">
+-        <item android:offset="0" android:color="#FFD40000"/>
+-        <item android:offset="0.2" android:color="#FFFF0000"/>
+-        <item android:offset="0.35" android:color="#FFFF8080"/>
+-        <item android:offset="0.56" android:color="#FFFF5555"/>
+-        <item android:offset="0.74" android:color="#FFFF0000"/>
+-        <item android:offset="1" android:color="#FFAA0000"/>
+-      </gradient>
+-    </aapt:attr>
+-  </path>
+-  <path
+-      android:pathData="m54.18,65.77 l42.72,-53.4s-5.01,4.07 -1.13,14.35c2.34,5.81 4.34,9.95 11.81,17.69 0,0 7.38,7.78 16.61,11.19 5,1.84 11.67,3.25 15.43,-0.51l-53.4,42.72s-10.68,10.68 -26.7,-5.34 -5.34,-26.7 -5.34,-26.7z">
+-    <aapt:attr name="android:fillColor">
+-      <gradient 
+-          android:startX="140.01"
+-          android:startY="-24.33"
+-          android:endX="176.32"
+-          android:endY="11.99"
+-          android:type="linear">
+-        <item android:offset="0" android:color="#FFD40000"/>
+-        <item android:offset="0.2" android:color="#FFFF0000"/>
+-        <item android:offset="0.35" android:color="#FFFF8080"/>
+-        <item android:offset="0.56" android:color="#FFFF5555"/>
+-        <item android:offset="0.74" android:color="#FFFF0000"/>
+-        <item android:offset="1" android:color="#FFAA0000"/>
+-      </gradient>
+-    </aapt:attr>
+-  </path>
+-  <path
+-      android:pathData="m142.52,56.85c-7.13,7.13 -23.74,2.1 -37.09,-11.25s-18.39,-29.95 -11.25,-37.09 23.74,-2.1 37.09,11.25 18.39,29.95 11.25,37.09z"
+-      android:fillType="evenOdd">
+-    <aapt:attr name="android:fillColor">
+-      <gradient 
+-          android:startX="102.73"
+-          android:startY="-11.51"
+-          android:endX="130.64"
+-          android:endY="70.07"
+-          android:type="linear">
+-        <item android:offset="0" android:color="#FFD40000"/>
+-        <item android:offset="0.05" android:color="#FFFF0000"/>
+-        <item android:offset="0.25" android:color="#FFFF8080"/>
+-        <item android:offset="0.43" android:color="#FFFF5555"/>
+-        <item android:offset="0.7" android:color="#FFFF0000"/>
+-        <item android:offset="1" android:color="#FFAA0000"/>
+-      </gradient>
+-    </aapt:attr>
+-  </path>
+-</vector>
+Index: app/src/main/res/layout/activity_user_page.xml
+===================================================================
+diff --git a/app/src/main/res/layout/activity_user_page.xml b/app/src/main/res/layout/activity_user_page.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/activity_user_page.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,57 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:layout_width="match_parent"
+-    android:layout_height="wrap_content"
+-    android:id="@+id/user_page"
+-    android:orientation="vertical"
+-    android:padding="24dp"
+-    android:gravity="center_horizontal">
+-
+-
+-    <ImageView
+-        android:id="@+id/profile_image"
+-        android:layout_width="120dp"
+-        android:layout_height="120dp"
+-        android:scaleType="centerCrop"
+-        android:layout_marginBottom="16dp"
+-        android:background="@drawable/circle_shape"
+-        android:clipToOutline="true" />
+-
+-
+-    <TextView
+-        android:id="@+id/name"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Display Name"
+-        android:textSize="20sp"
+-        android:textStyle="bold"
+-        android:layout_marginBottom="4dp" />
+-
+-
+-    <TextView
+-        android:id="@+id/email"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Email address"
+-        android:layout_marginBottom="2dp" />
+-
+-    <TextView
+-        android:id="@+id/country"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Country of Origin"
+-        android:layout_marginBottom="2dp" />
+-
+-    <Switch
+-        android:id="@+id/darkModeSwitch"
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:text="Dark Mode" />
+-
+-    <Button
+-        android:id="@+id/exit"
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:text="Go back" />
+-
+-</LinearLayout>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java b/app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,46 +0,0 @@
+-package hu.matusz.travelapp.util.animations;
+-
+-import android.animation.ValueAnimator;
+-import android.view.animation.LinearInterpolator;
+-import android.widget.ImageView;
+-
+-import hu.matusz.travelapp.R;
+-
+-public class SimpleLoadingAnimation {
+-    private ImageView loadingImage;
+-    private float currentRotation = 0f;
+-    private ValueAnimator rotationAnimator;
+-
+-    public SimpleLoadingAnimation(ImageView loadingImage) {
+-        this.loadingImage = loadingImage;
+-        startVariableSpeedRotation();
+-    }
+-
+-    public void startVariableSpeedRotation() {
+-        rotationAnimator = ValueAnimator.ofFloat(0f, 360f);
+-        rotationAnimator.setDuration(1000);
+-        rotationAnimator.setInterpolator(new LinearInterpolator());
+-        rotationAnimator.setRepeatCount(ValueAnimator.INFINITE);
+-        rotationAnimator.addUpdateListener(animation -> {
+-            float rotationDelta = (float) animation.getAnimatedValue();
+-            loadingImage.setRotation(currentRotation + rotationDelta);
+-        });
+-
+-        rotationAnimator.start();
+-
+-
+-        ValueAnimator speedChanger = ValueAnimator.ofInt(1600, 4000, 1600);
+-        speedChanger.setDuration(5000);
+-        speedChanger.setRepeatCount(ValueAnimator.INFINITE);
+-        speedChanger.setInterpolator(new LinearInterpolator());
+-        speedChanger.addUpdateListener(anim -> {
+-            int newDuration = (int) anim.getAnimatedValue();
+-            rotationAnimator.setDuration(newDuration);
+-        });
+-
+-        speedChanger.start();
+-    }
+-    public void destroy(){
+-        if (rotationAnimator != null) rotationAnimator.cancel();
+-    }
+-}
+Index: app/src/main/res/layout/activity_map.xml
+===================================================================
+diff --git a/app/src/main/res/layout/activity_map.xml b/app/src/main/res/layout/activity_map.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/activity_map.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,67 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<androidx.constraintlayout.widget.ConstraintLayout
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:app="http://schemas.android.com/apk/res-auto"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent">
+-
+-    <!-- Map view -->
+-    <org.osmdroid.views.MapView
+-        android:id="@+id/map"
+-        android:layout_width="0dp"
+-        android:layout_height="0dp"
+-        app:layout_constraintTop_toTopOf="parent"
+-        app:layout_constraintBottom_toBottomOf="parent"
+-        app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent" />
+-
+-    <!-- InfoPanel -->
+-    <LinearLayout
+-        android:id="@+id/info_panel"
+-        android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:orientation="vertical"
+-        android:background="@android:color/white"
+-        android:padding="16dp"
+-        android:visibility="gone"
+-        android:elevation="8dp"
+-        app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintEnd_toEndOf="parent"
+-        app:layout_constraintBottom_toBottomOf="parent">
+-
+-        <!-- title + close button -->
+-        <LinearLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:orientation="horizontal"
+-            android:gravity="center_vertical">
+-
+-            <TextView
+-                android:id="@+id/pin_title"
+-                android:layout_width="0dp"
+-                android:layout_height="wrap_content"
+-                android:layout_weight="1"
+-                android:hint="Pin Name"
+-                android:textSize="18sp"
+-                android:textStyle="bold" />
+-
+-            <ImageButton
+-                android:id="@+id/close_panel_button"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:background="?attr/selectableItemBackgroundBorderless"
+-                android:src="@android:drawable/ic_menu_close_clear_cancel"
+-                android:contentDescription="Close"
+-                app:tint="@android:color/black" />
+-        </LinearLayout>
+-
+-        <!-- Delete-Button -->
+-        <Button
+-            android:id="@+id/delete_pin_button"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:text="Delete Pin"
+-            android:layout_marginTop="12dp"/>
+-    </LinearLayout>
+-
+-</androidx.constraintlayout.widget.ConstraintLayout>
+Index: app/src/main/res/layout/activity_main.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"@+id/main\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:padding=\"24dp\"\n    android:background=\"#F9F9F9\">\n\n    <View\n        android:id=\"@+id/backgroundTint\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"match_parent\"\n        android:background=\"@color/background_red\"\n        android:alpha=\"0.07\" />\n\n    <LinearLayout\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\"\n        android:gravity=\"center\"\n        android:layout_gravity=\"center\">\n\n        <ImageView\n            android:id=\"@+id/logoImage\"\n            android:layout_width=\"220dp\"\n            android:layout_height=\"220dp\"\n            android:src=\"@drawable/ipsantarem\"\n            android:contentDescription=\"Logo\"\n            android:layout_marginTop=\"96dp\"/>\n\n        <TextView\n            android:id=\"@+id/welcomeText\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Welcome\"\n            android:textSize=\"40sp\"\n            android:textColor=\"#1C1C1E\"\n            android:textStyle=\"bold\"\n            android:layout_marginTop=\"48dp\" />\n\n        <TextView\n            android:id=\"@+id/subText\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Please sign in to continue\"\n            android:textSize=\"18sp\"\n            android:textColor=\"#6C6C70\"\n            android:layout_marginTop=\"16dp\" />\n\n        <!-- Google Sign-In Button -->\n        <com.google.android.gms.common.SignInButton\n            android:id=\"@+id/btnGoogleSignIn\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"64dp\" />\n\n    </LinearLayout>\n\n</FrameLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+--- a/app/src/main/res/layout/activity_main.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/layout/activity_main.xml	(date 1748950074603)
+@@ -1,59 +1,17 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
+     android:id="@+id/main"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
+-    android:padding="24dp"
+-    android:background="#F9F9F9">
+-
+-    <View
+-        android:id="@+id/backgroundTint"
+-        android:layout_width="match_parent"
+-        android:layout_height="match_parent"
+-        android:background="@color/background_red"
+-        android:alpha="0.07" />
+-
+-    <LinearLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:orientation="vertical"
+-        android:gravity="center"
+-        android:layout_gravity="center">
+-
+-        <ImageView
+-            android:id="@+id/logoImage"
+-            android:layout_width="220dp"
+-            android:layout_height="220dp"
+-            android:src="@drawable/ipsantarem"
+-            android:contentDescription="Logo"
+-            android:layout_marginTop="96dp"/>
+-
+-        <TextView
+-            android:id="@+id/welcomeText"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:text="Welcome"
+-            android:textSize="40sp"
+-            android:textColor="#1C1C1E"
+-            android:textStyle="bold"
+-            android:layout_marginTop="48dp" />
++    tools:context=".MainActivity">
+ 
+-        <TextView
+-            android:id="@+id/subText"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:text="Please sign in to continue"
+-            android:textSize="18sp"
+-            android:textColor="#6C6C70"
+-            android:layout_marginTop="16dp" />
+-
+-        <!-- Google Sign-In Button -->
+-        <com.google.android.gms.common.SignInButton
+-            android:id="@+id/btnGoogleSignIn"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="64dp" />
++    <com.google.android.gms.common.SignInButton
++        android:id="@+id/sign_in_button"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content" >
+ 
+-    </LinearLayout>
++    </com.google.android.gms.common.SignInButton>
+ 
+-</FrameLayout>
+\ No newline at end of file
++</androidx.appcompat.widget.LinearLayoutCompat>
+\ No newline at end of file
+Index: app/src/main/res/layout/login_activity.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"@+id/containerLayout\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:orientation=\"vertical\"\n    android:padding=\"16dp\">\n\n    <ImageView\n        android:id=\"@+id/loadingImage\"\n        android:layout_width=\"200dp\"\n        android:layout_height=\"200dp\"\n        android:layout_gravity=\"center\"\n        android:layout_weight=\"1\"\n        android:layout_centerInParent=\"true\"\n        android:contentDescription=\"Loading image\"\n        android:src=\"@drawable/ipsantarem\" />\n</LinearLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/login_activity.xml b/app/src/main/res/layout/login_activity.xml
+--- a/app/src/main/res/layout/login_activity.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/layout/login_activity.xml	(date 1748950075968)
+@@ -6,13 +6,9 @@
+     android:orientation="vertical"
+     android:padding="16dp">
+ 
+-    <ImageView
+-        android:id="@+id/loadingImage"
+-        android:layout_width="200dp"
+-        android:layout_height="200dp"
+-        android:layout_gravity="center"
+-        android:layout_weight="1"
+-        android:layout_centerInParent="true"
+-        android:contentDescription="Loading image"
+-        android:src="@drawable/ipsantarem" />
++    <Button
++        android:id="@+id/button"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:text="Debug" />
+ </LinearLayout>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database;\n\nimport android.util.Log;\n\nimport androidx.annotation.NonNull;\n\nimport com.google.firebase.database.DataSnapshot;\nimport com.google.firebase.database.DatabaseError;\nimport com.google.firebase.database.DatabaseReference;\nimport com.google.firebase.database.FirebaseDatabase;\nimport com.google.firebase.database.Query;\nimport com.google.firebase.database.ValueEventListener;\n\nimport java.util.ArrayList;\nimport java.util.List;\nimport java.util.Map;\n\nimport hu.matusz.travelapp.util.database.models.Comment;\nimport hu.matusz.travelapp.util.database.models.GeoLocation;\nimport hu.matusz.travelapp.util.database.models.User;\n\n/**\n * @deprecated Basically useless junk\n * @author Matusz\n * @version v6\n *\n */\npublic class DataConnect {\n    private static final String TAG = \"FirebaseDatabaseHelper\";\n    private final FirebaseDatabase database;\n    private final DatabaseReference usersRef;\n    private final DatabaseReference commentsRef;\n    private final DatabaseReference locationsRef;\n\n    @Deprecated\n    public interface DataStatus {\n        void DataIsLoaded(Object obj);\n        void DataIsInserted();\n        void DataIsUpdated();\n        void DataIsDeleted();\n        void DataIsError(String errorMessage);\n    }\n    @Deprecated\n    public DataConnect() {\n        database = FirebaseDatabase.getInstance();\n        usersRef = database.getReference(\"users\");\n        commentsRef = database.getReference(\"comments\");\n        locationsRef = database.getReference(\"locations\");\n    }\n\n    @Deprecated\n    public void saveUser(User user, final DataStatus dataStatus) {\n        Log.d(\"DEBUG_CHECK\", \"saveUser meghívva: \" + user.getUserId());\n        usersRef.child(user.getUserId()).setValue(user)\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"User saved successfully\");\n                    if (dataStatus != null) dataStatus.DataIsInserted();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error saving user\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n    @Deprecated\n    public void getUser(String userId, final DataStatus dataStatus) {\n        usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {\n            @Override\n            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {\n                if (dataSnapshot.exists()) {\n                    User user = dataSnapshot.getValue(User.class);\n                    if (dataStatus != null) dataStatus.DataIsLoaded(user);\n                } else {\n                    if (dataStatus != null) dataStatus.DataIsError(\"User not found\");\n                }\n            }\n\n            @Override\n            public void onCancelled(@NonNull DatabaseError databaseError) {\n                Log.e(TAG, \"getUserById:onCancelled\", databaseError.toException());\n                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());\n            }\n        });\n    }\n    @Deprecated\n    public void updateUser(String userId, Map<String, Object> updates, final DataStatus dataStatus) {\n        usersRef.child(userId).updateChildren(updates)\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"User updated successfully\");\n                    if (dataStatus != null) dataStatus.DataIsUpdated();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error updating user\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n    @Deprecated\n    public void deleteUser(String userId, final DataStatus dataStatus) {\n        usersRef.child(userId).removeValue()\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"User deleted successfully\");\n                    if (dataStatus != null) dataStatus.DataIsDeleted();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error deleting user\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n\n    @Deprecated\n    public void saveLocation(GeoLocation location, final DataStatus dataStatus) {\n        locationsRef.child(location.getGeoId()).setValue(location)\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"Location saved successfully\");\n                    if (dataStatus != null) dataStatus.DataIsInserted();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error saving location\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n    @Deprecated\n    public void getLocation(String geoId, final DataStatus dataStatus) {\n        locationsRef.child(geoId).addListenerForSingleValueEvent(new ValueEventListener() {\n            @Override\n            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {\n                if (dataSnapshot.exists()) {\n                    GeoLocation location = dataSnapshot.getValue(GeoLocation.class);\n                    if (dataStatus != null) dataStatus.DataIsLoaded(location);\n                } else {\n                    if (dataStatus != null) dataStatus.DataIsError(\"Location not found\");\n                }\n            }\n\n            @Override\n            public void onCancelled(@NonNull DatabaseError databaseError) {\n                Log.e(TAG, \"getLocationById:onCancelled\", databaseError.toException());\n                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());\n            }\n        });\n    }\n    @Deprecated\n    public void getLocationsNearby(double centerX, double centerY, double radius, final DataStatus dataStatus) {\n        locationsRef.addListenerForSingleValueEvent(new ValueEventListener() {\n            @Override\n            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {\n                List<GeoLocation> nearbyLocations = new ArrayList<>();\n                for (DataSnapshot locationSnapshot : dataSnapshot.getChildren()) {\n                    GeoLocation location = locationSnapshot.getValue(GeoLocation.class);\n                    if (location != null) {\n                        double distance = calculateDistance(centerX, centerY, location.getCoordX(), location.getCoordY());\n                        if (distance <= radius) {\n                            nearbyLocations.add(location);\n                        }\n                    }\n                }\n                if (dataStatus != null) dataStatus.DataIsLoaded(nearbyLocations);\n            }\n\n            @Override\n            public void onCancelled(@NonNull DatabaseError databaseError) {\n                Log.e(TAG, \"getLocationsNearby:onCancelled\", databaseError.toException());\n                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());\n            }\n        });\n    }\n\n    @Deprecated\n    public void saveComment(Comment comment, final DataStatus dataStatus) {\n        // A Firebase automatikusan generál egy egyedi ID-t\n        String commentId = comment.getCommentId();\n        if (commentId == null || commentId.isEmpty()) {\n            commentId = commentsRef.push().getKey();\n            comment.setCommentId(commentId);\n        }\n\n        commentsRef.child(commentId).setValue(comment)\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"Comment saved successfully\");\n                    if (dataStatus != null) dataStatus.DataIsInserted();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error saving comment\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n    @Deprecated\n    public void getCommentsByUser(String userId, final DataStatus dataStatus) {\n        Query query = commentsRef.orderByChild(\"userId\").equalTo(userId);\n        query.addListenerForSingleValueEvent(new ValueEventListener() {\n            @Override\n            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {\n                List<Comment> comments = new ArrayList<>();\n                for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {\n                    Comment comment = commentSnapshot.getValue(Comment.class);\n                    if (comment != null) {\n                        comments.add(comment);\n                    }\n                }\n                if (dataStatus != null) dataStatus.DataIsLoaded(comments);\n            }\n\n            @Override\n            public void onCancelled(@NonNull DatabaseError databaseError) {\n                Log.e(TAG, \"getCommentsByUser:onCancelled\", databaseError.toException());\n                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());\n            }\n        });\n    }\n    @Deprecated\n    public void getCommentsByLocation(String geoId, final DataStatus dataStatus) {\n        Query query = commentsRef.orderByChild(\"geoId\").equalTo(geoId);\n        query.addListenerForSingleValueEvent(new ValueEventListener() {\n            @Override\n            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {\n                List<Comment> comments = new ArrayList<>();\n                for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {\n                    Comment comment = commentSnapshot.getValue(Comment.class);\n                    if (comment != null) {\n                        comments.add(comment);\n                    }\n                }\n                if (dataStatus != null) dataStatus.DataIsLoaded(comments);\n            }\n\n            @Override\n            public void onCancelled(@NonNull DatabaseError databaseError) {\n                Log.e(TAG, \"getCommentsByLocation:onCancelled\", databaseError.toException());\n                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());\n            }\n        });\n    }\n    @Deprecated\n    public void updateComment(String commentId, Map<String, Object> updates, final DataStatus dataStatus) {\n        commentsRef.child(commentId).updateChildren(updates)\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"Comment updated successfully\");\n                    if (dataStatus != null) dataStatus.DataIsUpdated();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error updating comment\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n    @Deprecated\n    public void deleteComment(String commentId, final DataStatus dataStatus) {\n        commentsRef.child(commentId).removeValue()\n                .addOnSuccessListener(aVoid -> {\n                    Log.d(TAG, \"Comment deleted successfully\");\n                    if (dataStatus != null) dataStatus.DataIsDeleted();\n                })\n                .addOnFailureListener(e -> {\n                    Log.e(TAG, \"Error deleting comment\", e);\n                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());\n                });\n    }\n\n    @Deprecated\n    private double calculateDistance(double x1, double y1, double x2, double y2) {\n        // Euklideszi távolság számítása\n        // Megjegyzés: Ha GPS koordinátákat használsz, akkor haversine képletet kellene használni\n        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java b/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java	(date 1748950068587)
+@@ -76,7 +76,7 @@
+ 
+             @Override
+             public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getUserById:onCancelled", databaseError.toException());
++                Log.e(TAG, "getUser:onCancelled", databaseError.toException());
+                 if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+             }
+         });
+@@ -133,7 +133,7 @@
+ 
+             @Override
+             public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getLocationById:onCancelled", databaseError.toException());
++                Log.e(TAG, "getLocation:onCancelled", databaseError.toException());
+                 if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+             }
+         });
+Index: gradle/libs.versions.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>[versions]\nagp = \"8.9.1\"\njunit = \"4.13.2\"\njunitVersion = \"1.2.1\"\nespressoCore = \"3.6.1\"\nappcompat = \"1.7.0\"\nmaterial = \"1.12.0\"\nactivity = \"1.10.1\"\nconstraintlayout = \"2.2.1\"\nosmbonuspack = \"6.9.0\"\nosmdroidAndroid = \"6.1.16\"\npreference = \"1.2.1\"\ngoogleGmsGoogleServices = \"4.4.2\"\nfirebaseAuth = \"23.2.0\"\ncredentials = \"1.5.0\"\ncredentialsPlayServicesAuth = \"1.5.0\"\ngoogleid = \"1.1.1\"\nfirebaseDatabase = \"21.0.0\"\nfirebaseFirestore = \"25.1.4\"\n\n[libraries]\njunit = { group = \"junit\", name = \"junit\", version.ref = \"junit\" }\next-junit = { group = \"androidx.test.ext\", name = \"junit\", version.ref = \"junitVersion\" }\nespresso-core = { group = \"androidx.test.espresso\", name = \"espresso-core\", version.ref = \"espressoCore\" }\nappcompat = { group = \"androidx.appcompat\", name = \"appcompat\", version.ref = \"appcompat\" }\nmaterial = { group = \"com.google.android.material\", name = \"material\", version.ref = \"material\" }\nactivity = { group = \"androidx.activity\", name = \"activity\", version.ref = \"activity\" }\nconstraintlayout = { group = \"androidx.constraintlayout\", name = \"constraintlayout\", version.ref = \"constraintlayout\" }\nosmbonuspack = { module = \"com.github.MKergall:osmbonuspack\", version.ref = \"osmbonuspack\" }\nosmdroid-android = { module = \"org.osmdroid:osmdroid-android\", version.ref = \"osmdroidAndroid\" }\npreference = { group = \"androidx.preference\", name = \"preference\", version.ref = \"preference\" }\nfirebase-auth = { group = \"com.google.firebase\", name = \"firebase-auth\", version.ref = \"firebaseAuth\" }\ncredentials = { group = \"androidx.credentials\", name = \"credentials\", version.ref = \"credentials\" }\ncredentials-play-services-auth = { group = \"androidx.credentials\", name = \"credentials-play-services-auth\", version.ref = \"credentialsPlayServicesAuth\" }\ngoogleid = { group = \"com.google.android.libraries.identity.googleid\", name = \"googleid\", version.ref = \"googleid\" }\nfirebase-database = { group = \"com.google.firebase\", name = \"firebase-database\", version.ref = \"firebaseDatabase\" }\nfirebase-firestore = { group = \"com.google.firebase\", name = \"firebase-firestore\", version.ref = \"firebaseFirestore\" }\n\n[plugins]\nandroid-application = { id = \"com.android.application\", version.ref = \"agp\" }\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+--- a/gradle/libs.versions.toml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/gradle/libs.versions.toml	(date 1748950076907)
+@@ -1,5 +1,5 @@
+ [versions]
+-agp = "8.9.1"
++agp = "8.9.2"
+ junit = "4.13.2"
+ junitVersion = "1.2.1"
+ espressoCore = "3.6.1"
+@@ -7,9 +7,6 @@
+ material = "1.12.0"
+ activity = "1.10.1"
+ constraintlayout = "2.2.1"
+-osmbonuspack = "6.9.0"
+-osmdroidAndroid = "6.1.16"
+-preference = "1.2.1"
+ googleGmsGoogleServices = "4.4.2"
+ firebaseAuth = "23.2.0"
+ credentials = "1.5.0"
+@@ -26,9 +23,6 @@
+ material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+ activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+-osmbonuspack = { module = "com.github.MKergall:osmbonuspack", version.ref = "osmbonuspack" }
+-osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
+-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
+ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+ credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+ credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+@@ -38,4 +32,5 @@
+ 
+ [plugins]
+ android-application = { id = "com.android.application", version.ref = "agp" }
++google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+ 
+Index: app/google-services.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>{\n  \"project_info\": {\n    \"project_number\": \"853429563864\",\n    \"firebase_url\": \"https://travelapp2025erasmus-default-rtdb.europe-west1.firebasedatabase.app\",\n    \"project_id\": \"travelapp2025erasmus\",\n    \"storage_bucket\": \"travelapp2025erasmus.firebasestorage.app\"\n  },\n  \"client\": [\n    {\n      \"client_info\": {\n        \"mobilesdk_app_id\": \"1:853429563864:android:f399944474392fcc2902ad\",\n        \"android_client_info\": {\n          \"package_name\": \"hu.matusz.travelapp\"\n        }\n      },\n      \"oauth_client\": [\n        {\n          \"client_id\": \"853429563864-o4914hv47ifilvbmonif04obcq0ufpak.apps.googleusercontent.com\",\n          \"client_type\": 1,\n          \"android_info\": {\n            \"package_name\": \"hu.matusz.travelapp\",\n            \"certificate_hash\": \"b50342ef953f4e212905c0d89c5f34f433069f14\"\n          }\n        },\n        {\n          \"client_id\": \"853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com\",\n          \"client_type\": 3\n        }\n      ],\n      \"api_key\": [\n        {\n          \"current_key\": \"AIzaSyA4JkI_5ih_F0wJmiE3m33Zo4CEwWnP5uM\"\n        }\n      ],\n      \"services\": {\n        \"appinvite_service\": {\n          \"other_platform_oauth_client\": [\n            {\n              \"client_id\": \"853429563864-lqr75se268n3nr3e8a5av1rqkbgn3aae.apps.googleusercontent.com\",\n              \"client_type\": 3\n            },\n            {\n              \"client_id\": \"853429563864-9f18nmplalia3dd1kq8kfn13p4ek2m8i.apps.googleusercontent.com\",\n              \"client_type\": 2,\n              \"ios_info\": {\n                \"bundle_id\": \"hu.matusz.TravelAppios\"\n              }\n            }\n          ]\n        }\n      }\n    }\n  ],\n  \"configuration_version\": \"1\"\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/google-services.json b/app/google-services.json
+--- a/app/google-services.json	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/google-services.json	(date 1748950062200)
+@@ -36,15 +36,8 @@
+         "appinvite_service": {
+           "other_platform_oauth_client": [
+             {
+-              "client_id": "853429563864-lqr75se268n3nr3e8a5av1rqkbgn3aae.apps.googleusercontent.com",
++              "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+               "client_type": 3
+-            },
+-            {
+-              "client_id": "853429563864-9f18nmplalia3dd1kq8kfn13p4ek2m8i.apps.googleusercontent.com",
+-              "client_type": 2,
+-              "ios_info": {
+-                "bundle_id": "hu.matusz.TravelAppios"
+-              }
+             }
+           ]
+         }
+Index: app/src/main/res/values/themes.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources xmlns:tools=\"http://schemas.android.com/tools\">\n    <!-- Base application theme. -->\n    <style name=\"Base.Theme.TravelApp\" parent=\"Theme.Material3.DayNight.NoActionBar\">\n        <!-- Customize your light theme here. -->\n        <item name=\"colorPrimary\">@color/colorPrimary</item>\n        <item name=\"colorPrimaryVariant\">@color/colorPrimaryVariant</item>\n        <item name=\"colorOnPrimary\">@color/colorOnPrimary</item>\n        <!-- <item name=\"colorPrimary\">@color/my_light_primary</item> -->\n    </style>\n\n    <style name=\"Theme.TravelApp\" parent=\"Base.Theme.TravelApp\" />\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/themes.xml b/app/src/main/res/values/themes.xml
+--- a/app/src/main/res/values/themes.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values/themes.xml	(date 1748950075974)
+@@ -2,9 +2,6 @@
+     <!-- Base application theme. -->
+     <style name="Base.Theme.TravelApp" parent="Theme.Material3.DayNight.NoActionBar">
+         <!-- Customize your light theme here. -->
+-        <item name="colorPrimary">@color/colorPrimary</item>
+-        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+-        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+     </style>
+ 
+Index: app/src/main/res/values/colors.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"black\">#FF000000</color>\n    <color name=\"white\">#FFFFFFFF</color>\n    <color name=\"background_red\">#C03F4A</color>\n    <color name=\"colorPrimary\">#C03F4A</color>\n    <color name=\"colorPrimaryVariant\">#8A2B34</color>\n    <color name=\"colorOnPrimary\">#FFFFFF</color>\n\n    <color name=\"colorBackground\">#FFFFFF</color>\n    <color name=\"colorOnBackground\">#000000</color>\n\n    <color name=\"colorSurface\">#F5F5F5</color>\n    <color name=\"colorOnSurface\">#000000</color>\n\n    <color name=\"colorSecondary\">#FFB4A9</color>\n    <color name=\"colorOnSecondary\">#000000</color>\n\n    <color name=\"colorPrimaryD\">#C03F4A</color>\n    <color name=\"colorPrimaryVariantD\">#FF6B70</color>\n    <color name=\"colorOnPrimaryD\">#FFFFFF</color>\n\n    <color name=\"colorBackgroundD\">#121212</color>\n    <color name=\"colorOnBackgroundD\">#FFFFFF</color>\n\n    <color name=\"colorSurfaceD\">#1E1E1E</color>\n    <color name=\"colorOnSurfaceD\">#FFFFFF</color>\n\n    <color name=\"colorSecondaryD\">#FF8A80</color>\n    <color name=\"colorOnSecondaryD\">#000000</color>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/colors.xml b/app/src/main/res/values/colors.xml
+--- a/app/src/main/res/values/colors.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values/colors.xml	(date 1748950075972)
+@@ -2,30 +2,4 @@
+ <resources>
+     <color name="black">#FF000000</color>
+     <color name="white">#FFFFFFFF</color>
+-    <color name="background_red">#C03F4A</color>
+-    <color name="colorPrimary">#C03F4A</color>
+-    <color name="colorPrimaryVariant">#8A2B34</color>
+-    <color name="colorOnPrimary">#FFFFFF</color>
+-
+-    <color name="colorBackground">#FFFFFF</color>
+-    <color name="colorOnBackground">#000000</color>
+-
+-    <color name="colorSurface">#F5F5F5</color>
+-    <color name="colorOnSurface">#000000</color>
+-
+-    <color name="colorSecondary">#FFB4A9</color>
+-    <color name="colorOnSecondary">#000000</color>
+-
+-    <color name="colorPrimaryD">#C03F4A</color>
+-    <color name="colorPrimaryVariantD">#FF6B70</color>
+-    <color name="colorOnPrimaryD">#FFFFFF</color>
+-
+-    <color name="colorBackgroundD">#121212</color>
+-    <color name="colorOnBackgroundD">#FFFFFF</color>
+-
+-    <color name="colorSurfaceD">#1E1E1E</color>
+-    <color name="colorOnSurfaceD">#FFFFFF</color>
+-
+-    <color name="colorSecondaryD">#FF8A80</color>
+-    <color name="colorOnSecondaryD">#000000</color>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/values-night/themes.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources xmlns:tools=\"http://schemas.android.com/tools\">\n    <!-- Base application theme. -->\n    <style name=\"Base.Theme.TravelApp\" parent=\"Theme.Material3.DayNight.NoActionBar\">\n        <!-- Customize your dark theme here. -->\n        <item name=\"colorPrimary\">@color/colorPrimaryD</item>\n        <item name=\"colorPrimaryVariant\">@color/colorPrimaryVariantD</item>\n        <item name=\"colorOnPrimary\">@color/colorOnPrimaryD</item>\n        <!-- <item name=\"colorPrimary\">@color/my_dark_primary</item> -->\n    </style>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values-night/themes.xml b/app/src/main/res/values-night/themes.xml
+--- a/app/src/main/res/values-night/themes.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values-night/themes.xml	(date 1748950075970)
+@@ -2,9 +2,6 @@
+     <!-- Base application theme. -->
+     <style name="Base.Theme.TravelApp" parent="Theme.Material3.DayNight.NoActionBar">
+         <!-- Customize your dark theme here. -->
+-        <item name="colorPrimary">@color/colorPrimaryD</item>
+-        <item name="colorPrimaryVariant">@color/colorPrimaryVariantD</item>
+-        <item name="colorOnPrimary">@color/colorOnPrimaryD</item>
+         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+     </style>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/models/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database.models;\n\nimport java.io.Serializable;\n\npublic class User implements Serializable {\n    private String userId;\n    private String name;\n    private String email;\n    private String countryOfOriginCode;\n    private String photoURI;\n\n\n    public User() {\n\n    }\n\n    @Override\n    public String toString() {\n        return \"User{\" +\n                \"userId='\" + userId + '\\'' +\n                \", name='\" + name + '\\'' +\n                \", email='\" + email + '\\'' +\n                \", countryOfOriginCode='\" + countryOfOriginCode + '\\'' +\n                \", photoURI='\" + photoURI + '\\'' +\n                '}';\n    }\n\n    public User(String userId, String name, String email, String photoURI) {\n        this.userId = userId;\n        this.name = name;\n        this.email = email;\n        this.photoURI = photoURI;\n        this.countryOfOriginCode = \"\";\n    }\n\n    public User(String userId, String name, String email) {\n        this.userId = userId;\n        this.name = name;\n        this.email = email;\n        this.countryOfOriginCode = \"\";\n    }\n\n    public String getUserId() {\n        return userId;\n    }\n\n    public void setUserId(String userId) {\n        this.userId = userId;\n    }\n\n    public String getName() {\n        return name;\n    }\n\n    public void setName(String name) {\n        this.name = name;\n    }\n\n    public String getEmail() {\n        return email;\n    }\n\n    public void setEmail(String email) {\n        this.email = email;\n    }\n\n    public String getCountryOfOriginCode() {\n        return countryOfOriginCode;\n    }\n\n    public void setCountryOfOriginCode(String countryOfOriginCode) {\n        this.countryOfOriginCode = countryOfOriginCode;\n    }\n\n    public String getPhotoURI() {\n        return photoURI;\n    }\n\n    public void setPhotoURI(String photoURI) {\n        this.photoURI = photoURI;\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java b/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java	(date 1748950073167)
+@@ -1,13 +1,10 @@
+ package hu.matusz.travelapp.util.database.models;
+ 
+-import java.io.Serializable;
+-
+-public class User implements Serializable {
++public class User {
+     private String userId;
+     private String name;
+     private String email;
+     private String countryOfOriginCode;
+-    private String photoURI;
+ 
+ 
+     public User() {
+@@ -21,23 +18,21 @@
+                 ", name='" + name + '\'' +
+                 ", email='" + email + '\'' +
+                 ", countryOfOriginCode='" + countryOfOriginCode + '\'' +
+-                ", photoURI='" + photoURI + '\'' +
+                 '}';
+     }
+ 
+-    public User(String userId, String name, String email, String photoURI) {
++    public User(String userId, String name, String email, String countryOfOriginCode) {
+         this.userId = userId;
+         this.name = name;
+         this.email = email;
+-        this.photoURI = photoURI;
+-        this.countryOfOriginCode = "";
++        this.countryOfOriginCode = countryOfOriginCode;
+     }
+ 
+     public User(String userId, String name, String email) {
+         this.userId = userId;
+         this.name = name;
+         this.email = email;
+-        this.countryOfOriginCode = "";
++        this.countryOfOriginCode = "N/A";
+     }
+ 
+     public String getUserId() {
+@@ -71,12 +66,4 @@
+     public void setCountryOfOriginCode(String countryOfOriginCode) {
+         this.countryOfOriginCode = countryOfOriginCode;
+     }
+-
+-    public String getPhotoURI() {
+-        return photoURI;
+-    }
+-
+-    public void setPhotoURI(String photoURI) {
+-        this.photoURI = photoURI;
+-    }
+ }
+\ No newline at end of file
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\n\n    id(\"com.android.application\")\n    id(\"com.google.gms.google-services\")\n}\n\nandroid {\n    namespace = \"hu.matusz.travelapp\"\n    compileSdk = 35\n\n    defaultConfig {\n        applicationId = \"hu.matusz.travelapp\"\n        minSdk = 28\n        targetSdk = 35\n        versionCode = 1\n        versionName = \"1.0\"\n\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\n    }\n\n    buildTypes {\n        release {\n            isMinifyEnabled = false\n            proguardFiles(\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\n                \"proguard-rules.pro\"\n            )\n        }\n    }\n    compileOptions {\n        sourceCompatibility = JavaVersion.VERSION_11\n        targetCompatibility = JavaVersion.VERSION_11\n    }\n}\n\ndependencies {\n    //Open Stree map libary\n    implementation (libs.osmdroid.android)\n    implementation (libs.osmbonuspack)\n\n\n\n    implementation(\"com.github.bumptech.glide:glide:4.16.0\")\n    annotationProcessor(\"com.github.bumptech.glide:compiler:4.16.0\")\n    implementation(\"androidx.credentials:credentials-play-services-auth:1.2.0\")\n    implementation(\"com.google.firebase:firebase-database:20.3.0\")\n    implementation(\"com.google.firebase:firebase-auth:22.3.0\")\n    implementation(platform(\"com.google.firebase:firebase-bom:33.13.0\"))\n    implementation(\"com.google.firebase:firebase-firestore\")\n    implementation(\"com.google.firebase:firebase-database\")\n    implementation(\"com.google.firebase:firebase-analytics\")\n    implementation(\"androidx.credentials:credentials:1.2.0-alpha03\")\n    implementation(\"com.google.android.libraries.identity.googleid:googleid:1.0.0-beta02\")\n    implementation(libs.appcompat)\n    implementation(libs.material)\n    implementation(libs.activity)\n    implementation(libs.constraintlayout)\n    implementation(libs.firebase.auth)\n    implementation(libs.credentials)\n    implementation(libs.credentials.play.services.auth)\n    implementation(libs.googleid)\n    implementation(libs.firebase.database)\n    implementation(libs.firebase.firestore)\n    implementation(libs.preference)\n    testImplementation(libs.junit)\n    androidTestImplementation(libs.ext.junit)\n    androidTestImplementation(libs.espresso.core)\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/build.gradle.kts	(date 1748950061376)
+@@ -28,20 +28,12 @@
+         }
+     }
+     compileOptions {
+-        sourceCompatibility = JavaVersion.VERSION_11
+-        targetCompatibility = JavaVersion.VERSION_11
++        sourceCompatibility = JavaVersion.VERSION_17
++        targetCompatibility = JavaVersion.VERSION_17
+     }
+ }
+ 
+ dependencies {
+-    //Open Stree map libary
+-    implementation (libs.osmdroid.android)
+-    implementation (libs.osmbonuspack)
+-
+-
+-
+-    implementation("com.github.bumptech.glide:glide:4.16.0")
+-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+     implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
+     implementation("com.google.firebase:firebase-database:20.3.0")
+     implementation("com.google.firebase:firebase-auth:22.3.0")
+@@ -61,7 +53,6 @@
+     implementation(libs.googleid)
+     implementation(libs.firebase.database)
+     implementation(libs.firebase.firestore)
+-    implementation(libs.preference)
+     testImplementation(libs.junit)
+     androidTestImplementation(libs.ext.junit)
+     androidTestImplementation(libs.espresso.core)
+Index: app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util;\n\nimport java.util.UUID;\n/**\n * Litteraly just to quickly grab a <b style=\"color: aqua; \">UUID</b> for all the different IDs I have implemented. <br> Using UUIDv4\n * @author Matusz\n * @version v1\n */\npublic class UUIDGen {\n    public UUIDGen(){}\n    private static String test = null;\n    public String getUUID(){\n        return UUID.randomUUID().toString();\n    }\n\n    /**\n     * <b style=\"color: red; font-size: 40px\">For testing only. <br> DO NOT FORGET TO REMOVE</b>\n     * @author Matusz\n     *\n     */\n    public void setGlobalUUID(){\n        test = getUUID();\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java b/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java	(date 1748950067249)
+@@ -2,23 +2,14 @@
+ 
+ import java.util.UUID;
+ /**
+- * Litteraly just to quickly grab a <b style="color: aqua; ">UUID</b> for all the different IDs I have implemented. <br> Using UUIDv4
++ * Litteraly just to quickly grab a <b style="color: aqua; ">UUID</b> for all the differents IDs I have implemented.
+  * @author Matusz
+  * @version v1
+  */
+ public class UUIDGen {
+     public UUIDGen(){}
+-    private static String test = null;
++
+     public String getUUID(){
+         return UUID.randomUUID().toString();
+     }
+-
+-    /**
+-     * <b style="color: red; font-size: 40px">For testing only. <br> DO NOT FORGET TO REMOVE</b>
+-     * @author Matusz
+-     *
+-     */
+-    public void setGlobalUUID(){
+-        test = getUUID();
+-    }
+ }
+Index: app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database;\n\nimport android.util.Log;\n\nimport androidx.annotation.NonNull;\n\nimport com.google.android.gms.tasks.OnCompleteListener;\nimport com.google.android.gms.tasks.OnFailureListener;\nimport com.google.android.gms.tasks.OnSuccessListener;\nimport com.google.android.gms.tasks.Task;\nimport com.google.firebase.firestore.DocumentReference;\nimport com.google.firebase.firestore.FirebaseFirestore;\nimport com.google.firebase.firestore.QueryDocumentSnapshot;\nimport com.google.firebase.firestore.QuerySnapshot;\n\nimport java.net.ConnectException;\nimport java.util.ArrayList;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\n\nimport hu.matusz.travelapp.util.database.models.Comment;\nimport hu.matusz.travelapp.util.database.models.GeoLocation;\nimport hu.matusz.travelapp.util.database.models.User;\n\n/**\n * This class is responsible to handle the connection between the <i>remote database</i> and the <i>app</i>. <br>\n * <b>Usage</b>: Before using it, connection has to be initiated with <b style=\"color: rgb(240,240,30);\">init()</b>.\n * @author matusz\n * @version v2\n * {}\n */\npublic class FirestoreDataHandler{\n\n\n    FirebaseFirestore firestore;\n\n    /**\n     * Initiate connection\n     */\n    public void init(){\n        firestore = FirebaseFirestore.getInstance();\n    }\n\n    /**\n     * Drop Connection\n     * @throws ConnectException\n     */\n    public void voidConnection() throws ConnectException {\n        firestore = null;\n        Log.w(\"FIRESTORE\",\"Connection dropped\");\n        throw new ConnectException(\"Database connection voided\");\n    }\n    public FirestoreDataHandler() {\n    }\n\n    /**\n     * Saves user to <i style=\"color: red\">Firestore</i>\n     * @author Matusz\n     * @version v1\n     * @param user a non-null <b>User</b>, only defined after log-in process.\n     * @see User\n     */\n    public void saveUser(@NonNull User user){\n        Map<String, String> userMap = new HashMap<>();\n        userMap.put(\"id\", user.getUserId());\n        userMap.put(\"name\", user.getName());\n        userMap.put(\"cc\", user.getCountryOfOriginCode());\n        userMap.put(\"email\", user.getEmail());\n        userMap.put(\"pic\", user.getPhotoURI());\n\n        firestore.collection(\"users\").add(userMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {\n            @Override\n            public void onSuccess(DocumentReference documentReference) {\n                Log.d(\"FIRESTORE\",\"Sikeres mentés az adatbázisba ezzel az ID-vel: \"+ documentReference.getId()+\"\\t Firestore: \"+ documentReference.getFirestore());\n            }\n        }).addOnFailureListener(new OnFailureListener() {\n            @Override\n            public void onFailure(@NonNull Exception e) {\n                Log.w(\"FIRESTORE\", \"Kritikus hiba:\\t\", e);\n            }\n        });\n    }\n    /**\n     * Search and read a specific comment from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param userId Primary identifer for <i>users</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see User\n     */\n\n    public void getUserById(String userId, Callback<User> callback) {\n        firestore.collection(\"users\")\n                .whereEqualTo(\"id\", userId)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> userData = document.getData();\n\n                                User targetUser = new User();\n                                targetUser.setUserId((String) userData.get(\"id\"));\n                                targetUser.setName((String) userData.get(\"name\"));\n                                targetUser.setCountryOfOriginCode((String) userData.get(\"cc\"));\n                                targetUser.setEmail((String) userData.get(\"email\"));\n                                targetUser.setPhotoURI((String) userData.get(\"pic\"));\n                                callback.onAnswerReceived(targetUser);\n                            } else {\n                                callback.onError(new Exception(\"User not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n\n    }\n\n\n    /**\n     * Search and read a specific comment from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param email Email identifer for <i>users</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see User\n     */\n\n    public void getUserByEmail(String email, Callback<User> callback) {\n        firestore.collection(\"users\")\n                .whereEqualTo(\"email\", email)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> userData = document.getData();\n\n                                User targetUser = new User();\n                                targetUser.setUserId((String) userData.get(\"id\"));\n                                targetUser.setName((String) userData.get(\"name\"));\n                                targetUser.setCountryOfOriginCode((String) userData.get(\"cc\"));\n                                targetUser.setEmail((String) userData.get(\"email\"));\n                                targetUser.setPhotoURI((String) userData.get(\"pic\"));\n                                callback.onAnswerReceived(targetUser);\n                            } else {\n                                callback.onError(new Exception(\"User not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n\n    }\n\n    /**\n     * Saves comment to <i style=\"color: red\">Firestore</i>\n     * @author Matusz\n     * @version v1\n     * @param comment a non-null <b>Comment</b>.\n     * @see Comment\n     */\n    public void saveComment(@NonNull Comment comment){\n        Map<String, String> commentMap = new HashMap<>();\n        commentMap.put(\"userId\",comment.getUserId());\n        commentMap.put(\"commentId\", comment.getCommentId());\n        commentMap.put(\"geoId\", comment.getGeoId());\n        commentMap.put(\"comment\", comment.getComment());\n        commentMap.put(\"rate\", comment.getRate()+\"\");\n        commentMap.put(\"title\", comment.getTitle());\n\n        firestore.collection(\"comments\").add(commentMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {\n            @Override\n            public void onSuccess(DocumentReference documentReference) {\n                Log.d(\"FIRESTORE\",\"Sikeres mentés az adatbázisba ezzel az ID-vel: \"+ documentReference.getId()+\"\\t Firestore: \"+ documentReference.getFirestore());\n            }\n        }).addOnFailureListener(new OnFailureListener() {\n            @Override\n            public void onFailure(@NonNull Exception e) {\n                Log.w(\"FIRESTORE\", \"Kritikus hiba:\\t\", e);\n            }\n        });\n    }\n\n    /**\n     * Search and read a specific comment from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param commentId Primary identifer for <i>comment</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see Comment\n     */\n    public void getCommentById(String commentId, Callback<Comment> callback) {\n        firestore.collection(\"comments\")\n                .whereEqualTo(\"id\", commentId)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> commentData = document.getData();\n\n                                Comment targetComment = new Comment();\n                                targetComment.setUserId((String) commentData.get(\"userId\"));\n                                targetComment.setCommentId((String) commentData.get(\"commentId\"));\n                                targetComment.setComment((String) commentData.get(\"comment\"));\n                                targetComment.setRate(Integer.parseInt((String) commentData.get(\"rate\")));\n                                targetComment.setTitle((String) commentData.get(\"title\"));\n                                targetComment.setGeoId((String) commentData.get(\"geoId\"));\n\n                                callback.onAnswerReceived(targetComment);\n                            } else {\n                                callback.onError(new Exception(\"Comment not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n\n    }\n    public void getAllComment(Callback<List<Comment>> callback)\n    {\n        firestore.collection(\"comments\")\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            List<Comment> store = new ArrayList<>();\n                            for (QueryDocumentSnapshot document : task.getResult()) {\n                                Map<String, Object> commentData = document.getData();\n\n                                Comment targetComment = new Comment();\n                                targetComment.setUserId((String) commentData.get(\"userId\"));\n                                targetComment.setCommentId((String) commentData.get(\"commentId\"));\n                                targetComment.setComment((String) commentData.get(\"comment\"));\n                                targetComment.setRate((Integer.parseInt((String) commentData.get(\"rate\"))));\n                                targetComment.setTitle((String) commentData.get(\"title\"));\n                                targetComment.setGeoId((String) commentData.get(\"geoId\"));\n                                store.add(targetComment);\n                            }\n                            callback.onAnswerReceived(store);\n                        } else {\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n    }\n\n    /**\n     * Saves Location pin to <i style=\"color: red\">Firestore</i>\n     * @author Matusz\n     * @version v1\n     * @param geo a non-null <b>GeoLocation</b>.\n     * @see GeoLocation\n     */\n    public void saveLocation(@NonNull GeoLocation geo){\n        Map<String, String> locationMap = new HashMap<>();\n        locationMap.put(\"geoId\",geo.getGeoId());\n        locationMap.put(\"name\",geo.getPOI_name());\n        locationMap.put(\"x\",geo.getCoordX()+\"\");\n        locationMap.put(\"y\",geo.getCoordY()+\"\");\n\n        firestore.collection(\"locations\").add(locationMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {\n            @Override\n            public void onSuccess(DocumentReference documentReference) {\n                Log.d(\"FIRESTORE\",\"Sikeres mentés az adatbázisba ezzel az ID-vel: \"+ documentReference.getId()+\"\\t Firestore: \"+ documentReference.getFirestore());\n            }\n        }).addOnFailureListener(new OnFailureListener() {\n            @Override\n            public void onFailure(@NonNull Exception e) {\n                Log.w(\"FIRESTORE\", \"Kritikus hiba:\\t\", e);\n            }\n        });\n    }\n\n    /**\n     * Search and read a specific location from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param locationId Primary identifer for <i>comment</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see GeoLocation\n     */\n    public void getLocationById(String locationId, Callback<GeoLocation> callback) {\n        firestore.collection(\"locations\")\n                .whereEqualTo(\"id\", locationId)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> locationData = document.getData();\n\n                                GeoLocation targetLocation = new GeoLocation();\n                                targetLocation.setGeoId((String) locationData.get(\"geoId\"));\n                                targetLocation.setPOI_name((String) locationData.get(\"name\"));\n                                targetLocation.setCoordX(Double.parseDouble((String) locationData.get(\"x\")));\n                                targetLocation.setCoordY(Double.parseDouble((String) locationData.get(\"y\")));\n\n                                callback.onAnswerReceived(targetLocation);\n                            } else {\n                                callback.onError(new Exception(\"Location not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n    }\n\n\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java b/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java	(date 1748950070791)
+@@ -32,6 +32,10 @@
+  */
+ public class FirestoreDataHandler{
+ 
++    public interface Callback<T>{
++        void onAnswerReceived(T result);
++        void onError(Exception e);
++    }
+ 
+     FirebaseFirestore firestore;
+ 
+@@ -67,7 +71,6 @@
+         userMap.put("name", user.getName());
+         userMap.put("cc", user.getCountryOfOriginCode());
+         userMap.put("email", user.getEmail());
+-        userMap.put("pic", user.getPhotoURI());
+ 
+         firestore.collection("users").add(userMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+             @Override
+@@ -90,7 +93,7 @@
+      * @see User
+      */
+ 
+-    public void getUserById(String userId, Callback<User> callback) {
++    public void getUser(String userId, Callback<User> callback) {
+         firestore.collection("users")
+                 .whereEqualTo("id", userId)
+                 .get()
+@@ -107,7 +110,7 @@
+                                 targetUser.setName((String) userData.get("name"));
+                                 targetUser.setCountryOfOriginCode((String) userData.get("cc"));
+                                 targetUser.setEmail((String) userData.get("email"));
+-                                targetUser.setPhotoURI((String) userData.get("pic"));
++
+                                 callback.onAnswerReceived(targetUser);
+                             } else {
+                                 callback.onError(new Exception("User not found"));
+@@ -120,48 +123,6 @@
+                 });
+ 
+     }
+-
+-
+-    /**
+-     * Search and read a specific comment from <i style="color: red">Firestore</i>.
+-     * @author Matusz
+-     * @version v1
+-     * @param email Email identifer for <i>users</i>
+-     * @param callback Interface separeting the cloud function from the main thread.
+-     * @see User
+-     */
+-
+-    public void getUserByEmail(String email, Callback<User> callback) {
+-        firestore.collection("users")
+-                .whereEqualTo("email", email)
+-                .get()
+-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+-                    @Override
+-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+-                        if (task.isSuccessful()) {
+-                            if (!task.getResult().isEmpty()) {
+-                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+-                                Map<String, Object> userData = document.getData();
+-
+-                                User targetUser = new User();
+-                                targetUser.setUserId((String) userData.get("id"));
+-                                targetUser.setName((String) userData.get("name"));
+-                                targetUser.setCountryOfOriginCode((String) userData.get("cc"));
+-                                targetUser.setEmail((String) userData.get("email"));
+-                                targetUser.setPhotoURI((String) userData.get("pic"));
+-                                callback.onAnswerReceived(targetUser);
+-                            } else {
+-                                callback.onError(new Exception("User not found"));
+-                            }
+-                        } else {
+-                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
+-                            callback.onError(task.getException());
+-                        }
+-                    }
+-                });
+-
+-    }
+-
+     /**
+      * Saves comment to <i style="color: red">Firestore</i>
+      * @author Matusz
+@@ -199,7 +160,7 @@
+      * @param callback Interface separeting the cloud function from the main thread.
+      * @see Comment
+      */
+-    public void getCommentById(String commentId, Callback<Comment> callback) {
++    public void readComment(String commentId, Callback<Comment> callback) {
+         firestore.collection("comments")
+                 .whereEqualTo("id", commentId)
+                 .get()
+@@ -295,7 +256,7 @@
+      * @param callback Interface separeting the cloud function from the main thread.
+      * @see GeoLocation
+      */
+-    public void getLocationById(String locationId, Callback<GeoLocation> callback) {
++    public void getLocation(String locationId, Callback<GeoLocation> callback) {
+         firestore.collection("locations")
+                 .whereEqualTo("id", locationId)
+                 .get()
+@@ -324,6 +285,4 @@
+                     }
+                 });
+     }
+-
+-
+ }
+Index: app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database.models;\n\npublic class Comment {\n    private String userId;\n    private String commentId;\n    private String title;\n    private String comment;\n    private int rate;\n    private String geoId;\n\n\n    public Comment() {\n\n    }\n\n    public Comment(String userId, String commentId, String title, String comment, int rate, String geoId) {\n        this.userId = userId;\n        this.commentId = commentId;\n        this.title = title;\n        this.comment = comment;\n        this.rate = rate;\n        this.geoId = geoId;\n    }\n\n    public String getUserId() {\n        return userId;\n    }\n\n    public void setUserId(String userId) {\n        this.userId = userId;\n    }\n\n    public String getCommentId() {\n        return commentId;\n    }\n\n    public void setCommentId(String commentId) {\n        this.commentId = commentId;\n    }\n\n    public String getTitle() {\n        return title;\n    }\n\n    public void setTitle(String title) {\n        this.title = title;\n    }\n\n    public String getComment() {\n        return comment;\n    }\n\n    public void setComment(String comment) {\n        this.comment = comment;\n    }\n\n    public int getRate() {\n        return rate;\n    }\n\n    public void setRate(int rate) {\n        this.rate = rate;\n    }\n\n    public String getGeoId() {\n        return geoId;\n    }\n\n    public void setGeoId(String geoId) {\n        this.geoId = geoId;\n    }\n\n    @Override\n    public String   toString() {\n        return \"Comment{\" +\n                \"userId='\" + userId + '\\'' +\n                \", commentId='\" + commentId + '\\'' +\n                \", title='\" + title + '\\'' +\n                \", comment='\" + comment + '\\'' +\n                \", rate=\" + rate +\n                \", geoId='\" + geoId + '\\'' +\n                '}';\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java b/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java	(date 1748950072126)
+@@ -71,7 +71,7 @@
+     }
+ 
+     @Override
+-    public String   toString() {
++    public String toString() {
+         return "Comment{" +
+                 "userId='" + userId + '\'' +
+                 ", commentId='" + commentId + '\'' +
+Index: settings.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>pluginManagement {\n    repositories {\n        google {\n            content {\n                includeGroupByRegex(\"com\\\\.android.*\")\n                includeGroupByRegex(\"com\\\\.google.*\")\n                includeGroupByRegex(\"androidx.*\")\n            }\n        }\n        mavenCentral()\n        gradlePluginPortal()\n\n    }\n}\ndependencyResolutionManagement {\n    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)\n    repositories {\n        google()\n        mavenCentral()\n        maven { url = uri(\"https://jitpack.io\") }\n    }\n}\n\nrootProject.name = \"TravelApp\"\ninclude(\":app\")\n 
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/settings.gradle.kts b/settings.gradle.kts
+--- a/settings.gradle.kts	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/settings.gradle.kts	(date 1748950076908)
+@@ -9,7 +9,6 @@
+         }
+         mavenCentral()
+         gradlePluginPortal()
+-
+     }
+ }
+ dependencyResolutionManagement {
+@@ -17,7 +16,6 @@
+     repositories {
+         google()
+         mavenCentral()
+-        maven { url = uri("https://jitpack.io") }
+     }
+ }
+ 

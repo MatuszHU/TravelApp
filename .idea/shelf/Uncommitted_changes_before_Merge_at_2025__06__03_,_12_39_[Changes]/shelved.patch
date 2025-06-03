@@ -1,0 +1,64 @@
+Index: app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.classes;\n\nimport android.graphics.drawable.Drawable;\n\nimport androidx.core.content.ContextCompat;\n\nimport org.osmdroid.util.GeoPoint;\nimport org.osmdroid.views.MapView;\nimport org.osmdroid.views.overlay.Marker;\n\nimport hu.matusz.travelapp.MainActivity;\nimport hu.matusz.travelapp.R;\n\n/**\n * Custom marker\n */\npublic class CustomMarker extends Marker {\n\n    /**\n     * Constructor\n     * @param mapView view on which marker is\n     * @param point location where marker should be added\n     */\n    public CustomMarker(MapView mapView, GeoPoint point) {\n        super(mapView);\n        setPosition(point);\n\n        // Sets marker icon\n        Drawable customIcon = ContextCompat.getDrawable(mapView.getContext(), R.drawable.drawing_pin);\n        if (customIcon != null) {\n            customIcon.setBounds(0 ,0, customIcon.getIntrinsicWidth() / 10, customIcon.getIntrinsicHeight() / 10);\n            setIcon(customIcon);\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java b/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java
+--- a/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java	(revision e65f02b0f4725ca1e0c586bb34d4c1c51279931e)
++++ b/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java	(date 1748950779622)
+@@ -8,7 +8,6 @@
+ import org.osmdroid.views.MapView;
+ import org.osmdroid.views.overlay.Marker;
+ 
+-import hu.matusz.travelapp.MainActivity;
+ import hu.matusz.travelapp.R;
+ 
+ /**
+Index: app/src/main/java/hu/matusz/travelapp/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/MainActivity.java b/app/src/main/java/hu/matusz/travelapp/MapView.java
+rename from app/src/main/java/hu/matusz/travelapp/MainActivity.java
+rename to app/src/main/java/hu/matusz/travelapp/MapView.java
+--- a/app/src/main/java/hu/matusz/travelapp/MainActivity.java	(revision e65f02b0f4725ca1e0c586bb34d4c1c51279931e)
++++ b/app/src/main/java/hu/matusz/travelapp/MapView.java	(date 1748950779622)
+@@ -12,7 +12,6 @@
+ import android.content.Context;
+ import android.content.SharedPreferences;
+ import android.os.Bundle;
+-import android.util.Log;
+ import android.view.View;
+ import android.widget.Button;
+ import android.widget.ImageButton;
+@@ -27,7 +26,7 @@
+ import hu.matusz.travelapp.classes.CustomMarker;
+ import hu.matusz.travelapp.utils.InfoPanelAnimator;
+ 
+-public class MainActivity extends AppCompatActivity {
++public class MapView extends AppCompatActivity {
+     private static final String TAG = "MainActivity";
+ 
+     private MapView map;
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\">\n\n    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n\n    <application\n        android:allowBackup=\"true\"\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\n        android:fullBackupContent=\"@xml/backup_rules\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.TravelApp\"\n        tools:targetApi=\"31\">\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision e65f02b0f4725ca1e0c586bb34d4c1c51279931e)
++++ b/app/src/main/AndroidManifest.xml	(date 1748950779622)
+@@ -18,7 +18,7 @@
+         android:theme="@style/Theme.TravelApp"
+         tools:targetApi="31">
+         <activity
+-            android:name=".MainActivity"
++            android:name=".MapView"
+             android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />

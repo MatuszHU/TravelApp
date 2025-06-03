@@ -1,0 +1,230 @@
+Index: app/src/main/res/drawable/circle_shape.xml
+===================================================================
+diff --git a/app/src/main/res/drawable/circle_shape.xml b/app/src/main/res/drawable/circle_shape.xml
+deleted file mode 100644
+--- a/app/src/main/res/drawable/circle_shape.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,4 +0,0 @@
+-<shape xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:shape="oval">
+-    <solid android:color="#CCCCCC" />
+-</shape>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/UserActivity.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/UserActivity.java b/app/src/main/java/hu/matusz/travelapp/UserActivity.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/UserActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,79 +0,0 @@
+-package hu.matusz.travelapp;
+-
+-import android.os.Bundle;
+-import android.widget.ImageView;
+-import android.widget.Switch;
+-import android.widget.TextView;
+-
+-import androidx.activity.EdgeToEdge;
+-import androidx.appcompat.app.AppCompatActivity;
+-import androidx.appcompat.app.AppCompatDelegate;
+-import androidx.core.graphics.Insets;
+-import androidx.core.view.ViewCompat;
+-import androidx.core.view.WindowInsetsCompat;
+-
+-import com.bumptech.glide.Glide;
+-
+-import hu.matusz.travelapp.util.database.models.User;
+-import android.content.SharedPreferences;
+-/**
+- * Just a prototype
+- * @author Matusz
+- * @version v0.1
+- */
+-public class UserActivity extends AppCompatActivity {
+-    private User user;
+-    private Switch themeSwitch;
+-
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-
+-        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+-
+-
+-        boolean isDarkMode = prefs.getBoolean("dark_mode", false);
+-        AppCompatDelegate.setDefaultNightMode(
+-                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-        );
+-
+-
+-        super.onCreate(savedInstanceState);
+-        EdgeToEdge.enable(this);
+-        setContentView(R.layout.activity_user_page);
+-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.user_page), (v, insets) -> {
+-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+-            return insets;
+-        });
+-
+-        ImageView profileImage = findViewById(R.id.profile_image);
+-        TextView name = findViewById(R.id.name);
+-        TextView email = findViewById(R.id.email);
+-        TextView country = findViewById(R.id.country);
+-
+-        user = (User) getIntent().getSerializableExtra("user");
+-        if (user.getPhotoURI() != null && !user.getPhotoURI().isEmpty()) {
+-            Glide.with(this).load(user.getPhotoURI()).circleCrop().into(profileImage);
+-        }
+-
+-        name.setText(user.getName());
+-        email.setText(user.getEmail());
+-        country.setText(user.getCountryOfOriginCode());
+-
+-        themeSwitch = findViewById(R.id.darkModeSwitch);
+-
+-        themeSwitch.setOnCheckedChangeListener(null);
+-        themeSwitch.setChecked(isDarkMode);
+-        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+-            SharedPreferences.Editor editor = prefs.edit();
+-            editor.putBoolean("dark_mode", isChecked);
+-            editor.apply();
+-
+-            AppCompatDelegate.setDefaultNightMode(
+-                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-            );
+-        });
+-
+-    }
+-
+-}
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/Callback.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java b/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,6 +0,0 @@
+-package hu.matusz.travelapp.util.database;
+-
+-public interface Callback<T> {
+-    void onAnswerReceived(T result);
+-    void onError(Exception e);
+-}
+Index: app/src/main/res/layout/activity_user_page.xml
+===================================================================
+diff --git a/app/src/main/res/layout/activity_user_page.xml b/app/src/main/res/layout/activity_user_page.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/activity_user_page.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,57 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:layout_width="match_parent"
+-    android:layout_height="wrap_content"
+-    android:id="@+id/user_page"
+-    android:orientation="vertical"
+-    android:padding="24dp"
+-    android:gravity="center_horizontal">
+-
+-
+-    <ImageView
+-        android:id="@+id/profile_image"
+-        android:layout_width="120dp"
+-        android:layout_height="120dp"
+-        android:scaleType="centerCrop"
+-        android:layout_marginBottom="16dp"
+-        android:background="@drawable/circle_shape"
+-        android:clipToOutline="true" />
+-
+-
+-    <TextView
+-        android:id="@+id/name"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Display Name"
+-        android:textSize="20sp"
+-        android:textStyle="bold"
+-        android:layout_marginBottom="4dp" />
+-
+-
+-    <TextView
+-        android:id="@+id/email"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Email address"
+-        android:layout_marginBottom="2dp" />
+-
+-    <TextView
+-        android:id="@+id/country"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Country of Origin"
+-        android:layout_marginBottom="2dp" />
+-
+-    <Switch
+-        android:id="@+id/darkModeSwitch"
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:text="Dark Mode" />
+-
+-    <Button
+-        android:id="@+id/exit"
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:text="Go back" />
+-
+-</LinearLayout>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java b/app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/animations/SimpleLoadingAnimation.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,46 +0,0 @@
+-package hu.matusz.travelapp.util.animations;
+-
+-import android.animation.ValueAnimator;
+-import android.view.animation.LinearInterpolator;
+-import android.widget.ImageView;
+-
+-import hu.matusz.travelapp.R;
+-
+-public class SimpleLoadingAnimation {
+-    private ImageView loadingImage;
+-    private float currentRotation = 0f;
+-    private ValueAnimator rotationAnimator;
+-
+-    public SimpleLoadingAnimation(ImageView loadingImage) {
+-        this.loadingImage = loadingImage;
+-        startVariableSpeedRotation();
+-    }
+-
+-    public void startVariableSpeedRotation() {
+-        rotationAnimator = ValueAnimator.ofFloat(0f, 360f);
+-        rotationAnimator.setDuration(1000);
+-        rotationAnimator.setInterpolator(new LinearInterpolator());
+-        rotationAnimator.setRepeatCount(ValueAnimator.INFINITE);
+-        rotationAnimator.addUpdateListener(animation -> {
+-            float rotationDelta = (float) animation.getAnimatedValue();
+-            loadingImage.setRotation(currentRotation + rotationDelta);
+-        });
+-
+-        rotationAnimator.start();
+-
+-
+-        ValueAnimator speedChanger = ValueAnimator.ofInt(1600, 4000, 1600);
+-        speedChanger.setDuration(5000);
+-        speedChanger.setRepeatCount(ValueAnimator.INFINITE);
+-        speedChanger.setInterpolator(new LinearInterpolator());
+-        speedChanger.addUpdateListener(anim -> {
+-            int newDuration = (int) anim.getAnimatedValue();
+-            rotationAnimator.setDuration(newDuration);
+-        });
+-
+-        speedChanger.start();
+-    }
+-    public void destroy(){
+-        if (rotationAnimator != null) rotationAnimator.cancel();
+-    }
+-}

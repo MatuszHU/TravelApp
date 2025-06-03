@@ -1,6 +1,8 @@
 package hu.matusz.travelapp;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -23,7 +25,7 @@ import android.content.SharedPreferences;
  */
 public class UserActivity extends AppCompatActivity {
     private User user;
-    private Switch themeSwitch;
+    private Button toMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +61,7 @@ public class UserActivity extends AppCompatActivity {
         name.setText(user.getName());
         email.setText(user.getEmail());
         country.setText(user.getCountryOfOriginCode());
-
+/*
         themeSwitch = findViewById(R.id.darkModeSwitch);
 
         themeSwitch.setOnCheckedChangeListener(null);
@@ -73,7 +75,13 @@ public class UserActivity extends AppCompatActivity {
                     isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
             );
         });
-
+*/
+        toMap = findViewById(R.id.exit);
+        toMap.setOnClickListener(v -> {
+            Intent intent = new Intent(UserActivity.this, MapActivity.class);
+            intent.putExtra("user", user);
+            startActivity(intent);
+        });
     }
 
 }

@@ -1,0 +1,444 @@
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\">\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\n        android:fullBackupContent=\"@xml/backup_rules\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.TravelApp\"\n        tools:targetApi=\"31\">\n        <activity\n            android:name=\".UserActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity android:name=\".GoogleSignInActivity\" />\n\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/AndroidManifest.xml	(date 1746635845046)
+@@ -15,19 +15,22 @@
+         android:theme="@style/Theme.TravelApp"
+         tools:targetApi="31">
+         <activity
+-            android:name=".UserActivity"
+-            android:exported="false" />
+-        <activity
+-            android:name=".MainActivity"
++            android:name=".StartingScreen"
+             android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 
+                 <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
++        </activity>
++        <activity
++            android:name=".UserActivity"
++            android:exported="false" />
++        <activity
++            android:name=".MainActivity"
++            android:exported="true">
+         </activity>
+         <activity android:name=".GoogleSignInActivity" />
+-
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\n\n    id(\"com.android.application\")\n    id(\"com.google.gms.google-services\")\n}\n\nandroid {\n    namespace = \"hu.matusz.travelapp\"\n    compileSdk = 35\n\n    defaultConfig {\n        applicationId = \"hu.matusz.travelapp\"\n        minSdk = 28\n        targetSdk = 35\n        versionCode = 1\n        versionName = \"1.0\"\n\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\n    }\n\n    buildTypes {\n        release {\n            isMinifyEnabled = false\n            proguardFiles(\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\n                \"proguard-rules.pro\"\n            )\n        }\n    }\n    compileOptions {\n        sourceCompatibility = JavaVersion.VERSION_11\n        targetCompatibility = JavaVersion.VERSION_11\n    }\n}\n\ndependencies {\n    //Open Stree map libary\n    implementation (libs.osmdroid.android)\n    implementation (libs.osmbonuspack)\n\n\n\n    implementation(\"com.github.bumptech.glide:glide:4.16.0\")\n    annotationProcessor(\"com.github.bumptech.glide:compiler:4.16.0\")\n    implementation(\"androidx.credentials:credentials-play-services-auth:1.2.0\")\n    implementation(\"com.google.firebase:firebase-database:20.3.0\")\n    implementation(\"com.google.firebase:firebase-auth:22.3.0\")\n    implementation(platform(\"com.google.firebase:firebase-bom:33.13.0\"))\n    implementation(\"com.google.firebase:firebase-firestore\")\n    implementation(\"com.google.firebase:firebase-database\")\n    implementation(\"com.google.firebase:firebase-analytics\")\n    implementation(\"androidx.credentials:credentials:1.2.0-alpha03\")\n    implementation(\"com.google.android.libraries.identity.googleid:googleid:1.0.0-beta02\")\n    implementation(libs.appcompat)\n    implementation(libs.material)\n    implementation(libs.activity)\n    implementation(libs.constraintlayout)\n    implementation(libs.firebase.auth)\n    implementation(libs.credentials)\n    implementation(libs.credentials.play.services.auth)\n    implementation(libs.googleid)\n    implementation(libs.firebase.database)\n    implementation(libs.firebase.firestore)\n    implementation(libs.preference)\n    testImplementation(libs.junit)\n    androidTestImplementation(libs.ext.junit)\n    androidTestImplementation(libs.espresso.core)\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/build.gradle.kts	(date 1746636933938)
+@@ -28,8 +28,8 @@
+         }
+     }
+     compileOptions {
+-        sourceCompatibility = JavaVersion.VERSION_11
+-        targetCompatibility = JavaVersion.VERSION_11
++        sourceCompatibility = JavaVersion.VERSION_17
++        targetCompatibility = JavaVersion.VERSION_17
+     }
+ }
+ 
+Index: app/src/main/java/hu/matusz/travelapp/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp;\n\nimport org.osmdroid.api.IMapController;\nimport org.osmdroid.config.Configuration;\nimport org.osmdroid.events.MapEventsReceiver;\nimport org.osmdroid.tileprovider.tilesource.TileSourceFactory;\nimport org.osmdroid.util.GeoPoint;\nimport org.osmdroid.views.MapView;\nimport org.osmdroid.views.overlay.MapEventsOverlay;\nimport org.osmdroid.views.overlay.Marker;\n\nimport android.content.Context;\nimport android.content.SharedPreferences;\nimport android.os.Bundle;\nimport android.util.Log;\nimport android.view.View;\nimport android.widget.Button;\nimport android.widget.ImageButton;\nimport android.widget.LinearLayout;\nimport android.widget.TextView;\n\nimport androidx.appcompat.app.AlertDialog;\nimport androidx.appcompat.app.AppCompatActivity;\n\nimport java.io.File;\n\nimport hu.matusz.travelapp.classes.CustomMarker;\nimport hu.matusz.travelapp.utils.InfoPanelAnimator;\n\npublic class MainActivity extends AppCompatActivity {\n    private static final String TAG = \"MainActivity\";\n\n    private MapView map;\n    private LinearLayout infoPanel;\n    private TextView pinTitle;\n    private ImageButton closePanelButton;\n    private Button deletePinButton;\n    private Marker selectedMarker = null;\n\n    // only for development\n    private int markerCounter = 0;\n\n    /**\n     * Creates a osm map\n     * @param savedInstanceState If the activity is being re-initialized after\n     *     previously being shut down then this Bundle contains the data it most\n     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>\n     *\n     */\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n\n        Context ctx = getApplicationContext();\n\n        // Setup internal tile cache (no permissions needed)\n        File osmdroidBasePath = new File(ctx.getFilesDir(), \"osmdroid\");\n        if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();\n        Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);\n        Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, \"tiles\"));\n\n        // Load preferences using AndroidX\n        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);\n        Configuration.getInstance().load(ctx, prefs);\n\n        // Set layout\n        setContentView(R.layout.activity_map);\n\n        // Initialize the MapView\n        map = findViewById(R.id.map);\n        map.setTileSource(TileSourceFactory.MAPNIK);\n        map.setTilesScaledToDpi(true);\n        map.setBuiltInZoomControls(true);\n        map.setMultiTouchControls(true);\n\n        // Initialize views\n        infoPanel = findViewById(R.id.info_panel);\n        pinTitle = findViewById(R.id.pin_title);\n        closePanelButton = findViewById(R.id.close_panel_button);\n        deletePinButton = findViewById(R.id.delete_pin_button);\n\n        // closes infoPanel\n        closePanelButton.setOnClickListener(v -> {\n            closeInfoPanel();\n            selectedMarker = null;\n        });\n\n        // configure delete button\n        deletePinButton.setOnClickListener(v -> {\n            if (selectedMarker != null) {\n\n                // Alerts before deleting\n                new AlertDialog.Builder(map.getContext())\n                        .setTitle(\"Remove pin\")\n                        .setMessage(\"Do you want to remove the pin \\\"\" + selectedMarker.getTitle() + \"\\\" ?\")\n                        .setPositiveButton(\"Remove\", (dialog, which) -> {\n                            map.getOverlays().remove(selectedMarker);\n                            closeInfoPanel();\n                            selectedMarker = null;\n                            map.invalidate();\n                        })\n                        .setNegativeButton(\"Cancel\", null)\n                        .show();\n            }\n        });\n\n        // Add event listener to detect map taps\n        map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {\n            @Override\n            public boolean singleTapConfirmedHelper(GeoPoint p) {\n                // Add marker at tapped location\n                addMarkerAt(p);\n                return true;\n            }\n\n            @Override\n            public boolean longPressHelper(GeoPoint p) {\n                return false;\n            }\n        }));\n\n        // Center map on given location\n        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate\n        IMapController mapController = map.getController();\n        mapController.setZoom(19);\n        mapController.setCenter(startPoint);\n\n        // Add marker\n        Marker startMarker = new Marker(map);\n        startMarker.setPosition(startPoint);\n        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);\n        startMarker.setTitle(\"Get doxed lol\");\n        map.getOverlays().add(startMarker);\n\n        // refresh view\n        map.invalidate();\n    }\n\n    /**\n     * Adds a marker at a given point\n     * @param point Location where marker should be added\n     */\n    private void addMarkerAt(GeoPoint point) {\n        CustomMarker marker = new CustomMarker(map, point);\n        marker.setTitle(\"New Pin \" + markerCounter);\n        selectedMarker = marker;\n        markerCounter++;\n\n        // defines behavior of pins when clicked\n        marker.setOnMarkerClickListener((m, mapView) -> {\n            if(m.equals((selectedMarker)))\n                return true;\n\n            selectedMarker = m;\n            openInfoPanel(m);\n\n            return true;\n        });\n\n        map.getOverlays().add(marker);\n        openInfoPanel(marker);\n        map.invalidate();\n    }\n\n    /**\n     * Opens the info panel to the given marker\n     * @param marker The marker to which the info panel should be shown\n     */\n    private void openInfoPanel(Marker marker) {\n        pinTitle.setText(marker.getTitle());\n        if (!(infoPanel.getVisibility() == View.VISIBLE))\n            InfoPanelAnimator.showPanel(infoPanel);\n    }\n\n    /**\n     * Closes info panel\n     */\n    private void closeInfoPanel() {\n        InfoPanelAnimator.hidePanel(infoPanel);\n    }\n\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/MainActivity.java b/app/src/main/java/hu/matusz/travelapp/MainActivity.java
+--- a/app/src/main/java/hu/matusz/travelapp/MainActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/MainActivity.java	(date 1746716035357)
+@@ -23,12 +23,23 @@
+ import androidx.appcompat.app.AppCompatActivity;
+ 
+ import java.io.File;
++import java.util.List;
+ 
+ import hu.matusz.travelapp.classes.CustomMarker;
+-import hu.matusz.travelapp.utils.InfoPanelAnimator;
++import hu.matusz.travelapp.util.UUIDGen;
++import hu.matusz.travelapp.util.animations.InfoPanelAnimator;
++import hu.matusz.travelapp.util.database.Callback;
++import hu.matusz.travelapp.util.database.FirestoreDataHandler;
++import hu.matusz.travelapp.util.database.models.GeoLocation;
++import hu.matusz.travelapp.util.database.models.User;
+ 
+ public class MainActivity extends AppCompatActivity {
++
++    private User user;
++    private FirestoreDataHandler fc = new FirestoreDataHandler();
+     private static final String TAG = "MainActivity";
++    private UUIDGen u = new UUIDGen();
++
+ 
+     private MapView map;
+     private LinearLayout infoPanel;
+@@ -36,10 +47,10 @@
+     private ImageButton closePanelButton;
+     private Button deletePinButton;
+     private Marker selectedMarker = null;
++    private Button savePinButton;
+ 
+     // only for development
+     private int markerCounter = 0;
+-
+     /**
+      * Creates a osm map
+      * @param savedInstanceState If the activity is being re-initialized after
+@@ -52,7 +63,10 @@
+         super.onCreate(savedInstanceState);
+ 
+         Context ctx = getApplicationContext();
+-
++        //Get user from previous activity
++        user = (User) getIntent().getSerializableExtra("user");
++        //Initialize data handler for the view
++        fc.init();
+         // Setup internal tile cache (no permissions needed)
+         File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
+         if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
+@@ -66,6 +80,20 @@
+         // Set layout
+         setContentView(R.layout.activity_map);
+ 
++        //Test
++        fc.getAllLocation(new Callback<List<GeoLocation>>() {
++            @Override
++            public void onAnswerReceived(List<GeoLocation> result) {
++                for (int i = 0; i < result.size(); i++) {
++                    Log.d("LOCTAG", "onAnswerReceived: "+result.get(i).toString());
++                }
++            }
++
++            @Override
++            public void onError(Exception e) {
++
++            }
++        });
+         // Initialize the MapView
+         map = findViewById(R.id.map);
+         map.setTileSource(TileSourceFactory.MAPNIK);
+@@ -78,7 +106,7 @@
+         pinTitle = findViewById(R.id.pin_title);
+         closePanelButton = findViewById(R.id.close_panel_button);
+         deletePinButton = findViewById(R.id.delete_pin_button);
+-
++        savePinButton = findViewById(R.id.save_pin_button);
+         // closes infoPanel
+         closePanelButton.setOnClickListener(v -> {
+             closeInfoPanel();
+@@ -103,7 +131,12 @@
+                         .show();
+             }
+         });
+-
++        //*Save location to the cloud
++        savePinButton.setOnClickListener(v -> {
++                if (selectedMarker != null) {
++                    fc.saveLocation(new GeoLocation(selectedMarker.getPosition().getLatitude(), selectedMarker.getPosition().getLongitude(), selectedMarker.getTitle(), u.getUUID()));
++                }
++        });
+         // Add event listener to detect map taps
+         map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
+             @Override
+@@ -120,7 +153,7 @@
+         }));
+ 
+         // Center map on given location
+-        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
++        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate (Nope)
+         IMapController mapController = map.getController();
+         mapController.setZoom(19);
+         mapController.setCenter(startPoint);
+@@ -129,7 +162,7 @@
+         Marker startMarker = new Marker(map);
+         startMarker.setPosition(startPoint);
+         startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+-        startMarker.setTitle("Get doxed lol");
++        startMarker.setTitle("Get doxed lol"); //Ha ha... missed me
+         map.getOverlays().add(startMarker);
+ 
+         // refresh view
+Index: app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database.models;\n\npublic class GeoLocation {\n    private double coordX;\n    private double coordY;\n    private String POI_name;\n    private String geoId;\n    public GeoLocation() {\n\n    }\n\n    public GeoLocation(double coordX, double coordY, String POI_name, String geoId) {\n        this.coordX = coordX;\n        this.coordY = coordY;\n        this.POI_name = POI_name;\n        this.geoId = geoId;\n    }\n\n    public double getCoordX() {\n        return coordX;\n    }\n\n    public void setCoordX(double coordX) {\n        this.coordX = coordX;\n    }\n\n    public double getCoordY() {\n        return coordY;\n    }\n\n    public void setCoordY(double coordY) {\n        this.coordY = coordY;\n    }\n\n    public String getPOI_name() {\n        return POI_name;\n    }\n\n    public void setPOI_name(String POI_name) {\n        this.POI_name = POI_name;\n    }\n\n    public String getGeoId() {\n        return geoId;\n    }\n\n    public void setGeoId(String geoId) {\n        this.geoId = geoId;\n    }\n}
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java b/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java	(date 1746786436602)
+@@ -9,6 +9,16 @@
+ 
+     }
+ 
++    @Override
++    public String toString() {
++        return "GeoLocation{" +
++                "coordX=" + coordX +
++                ", coordY=" + coordY +
++                ", POI_name='" + POI_name + '\'' +
++                ", geoId='" + geoId + '\'' +
++                '}';
++    }
++
+     public GeoLocation(double coordX, double coordY, String POI_name, String geoId) {
+         this.coordX = coordX;
+         this.coordY = coordY;
+Index: app/src/main/java/hu/matusz/travelapp/UserActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp;\n\nimport android.os.Bundle;\nimport android.widget.ImageView;\nimport android.widget.Switch;\nimport android.widget.TextView;\n\nimport androidx.activity.EdgeToEdge;\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.appcompat.app.AppCompatDelegate;\nimport androidx.core.graphics.Insets;\nimport androidx.core.view.ViewCompat;\nimport androidx.core.view.WindowInsetsCompat;\n\nimport com.bumptech.glide.Glide;\n\nimport hu.matusz.travelapp.util.database.models.User;\nimport android.content.SharedPreferences;\n/**\n * Just a prototype\n * @author Matusz\n * @version v0.1\n */\npublic class UserActivity extends AppCompatActivity {\n    private User user;\n    private Switch themeSwitch;\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n\n        SharedPreferences prefs = getSharedPreferences(\"settings\", MODE_PRIVATE);\n\n\n        boolean isDarkMode = prefs.getBoolean(\"dark_mode\", false);\n        AppCompatDelegate.setDefaultNightMode(\n                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO\n        );\n\n\n        super.onCreate(savedInstanceState);\n        EdgeToEdge.enable(this);\n        setContentView(R.layout.activity_user_page);\n        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.user_page), (v, insets) -> {\n            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());\n            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);\n            return insets;\n        });\n\n        ImageView profileImage = findViewById(R.id.profile_image);\n        TextView name = findViewById(R.id.name);\n        TextView email = findViewById(R.id.email);\n        TextView country = findViewById(R.id.country);\n\n        user = (User) getIntent().getSerializableExtra(\"user\");\n        if (user.getPhotoURI() != null && !user.getPhotoURI().isEmpty()) {\n            Glide.with(this).load(user.getPhotoURI()).circleCrop().into(profileImage);\n        }\n\n        name.setText(user.getName());\n        email.setText(user.getEmail());\n        country.setText(user.getCountryOfOriginCode());\n\n        themeSwitch = findViewById(R.id.darkModeSwitch);\n\n        themeSwitch.setOnCheckedChangeListener(null);\n        themeSwitch.setChecked(isDarkMode);\n        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {\n            SharedPreferences.Editor editor = prefs.edit();\n            editor.putBoolean(\"dark_mode\", isChecked);\n            editor.apply();\n\n            AppCompatDelegate.setDefaultNightMode(\n                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO\n            );\n        });\n\n    }\n\n}
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/UserActivity.java b/app/src/main/java/hu/matusz/travelapp/UserActivity.java
+--- a/app/src/main/java/hu/matusz/travelapp/UserActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/UserActivity.java	(date 1746637202509)
+@@ -1,6 +1,9 @@
+ package hu.matusz.travelapp;
+ 
++import android.content.Intent;
+ import android.os.Bundle;
++import android.view.View;
++import android.widget.Button;
+ import android.widget.ImageView;
+ import android.widget.Switch;
+ import android.widget.TextView;
+@@ -23,19 +26,12 @@
+  */
+ public class UserActivity extends AppCompatActivity {
+     private User user;
+-    private Switch themeSwitch;
++    private Button goBack;
++
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+ 
+-        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+-
+-
+-        boolean isDarkMode = prefs.getBoolean("dark_mode", false);
+-        AppCompatDelegate.setDefaultNightMode(
+-                isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-        );
+-
+ 
+         super.onCreate(savedInstanceState);
+         EdgeToEdge.enable(this);
+@@ -60,18 +56,14 @@
+         email.setText(user.getEmail());
+         country.setText(user.getCountryOfOriginCode());
+ 
+-        themeSwitch = findViewById(R.id.darkModeSwitch);
+-
+-        themeSwitch.setOnCheckedChangeListener(null);
+-        themeSwitch.setChecked(isDarkMode);
+-        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+-            SharedPreferences.Editor editor = prefs.edit();
+-            editor.putBoolean("dark_mode", isChecked);
+-            editor.apply();
+-
+-            AppCompatDelegate.setDefaultNightMode(
+-                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+-            );
++        goBack = findViewById(R.id.goBackUser);
++        goBack.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                Intent loggedInIntent = new Intent(UserActivity.this, MainActivity.class);
++                loggedInIntent.putExtra("user", user);
++                startActivity(loggedInIntent);
++            }
+         });
+ 
+     }
+Index: app/src/main/res/layout/activity_user_page.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:id=\"@+id/user_page\"\n    android:orientation=\"vertical\"\n    android:padding=\"24dp\"\n    android:gravity=\"center_horizontal\">\n\n\n    <ImageView\n        android:id=\"@+id/profile_image\"\n        android:layout_width=\"120dp\"\n        android:layout_height=\"120dp\"\n        android:scaleType=\"centerCrop\"\n        android:layout_marginBottom=\"16dp\"\n        android:background=\"@drawable/circle_shape\"\n        android:clipToOutline=\"true\" />\n\n\n    <TextView\n        android:id=\"@+id/name\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Display Name\"\n        android:textSize=\"20sp\"\n        android:textStyle=\"bold\"\n        android:layout_marginBottom=\"4dp\" />\n\n\n    <TextView\n        android:id=\"@+id/email\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Email address\"\n        android:layout_marginBottom=\"2dp\" />\n\n    <TextView\n        android:id=\"@+id/country\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Country of Origin\"\n        android:layout_marginBottom=\"2dp\" />\n\n    <Switch\n        android:id=\"@+id/darkModeSwitch\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Dark Mode\" />\n\n    <Button\n        android:id=\"@+id/exit\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:text=\"Go back\" />\n\n</LinearLayout>
+===================================================================
+diff --git a/app/src/main/res/layout/activity_user_page.xml b/app/src/main/res/layout/activity_user_page.xml
+--- a/app/src/main/res/layout/activity_user_page.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/layout/activity_user_page.xml	(date 1746637202516)
+@@ -42,14 +42,9 @@
+         android:text="Country of Origin"
+         android:layout_marginBottom="2dp" />
+ 
+-    <Switch
+-        android:id="@+id/darkModeSwitch"
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:text="Dark Mode" />
+ 
+     <Button
+-        android:id="@+id/exit"
++        android:id="@+id/goBackUser"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:text="Go back" />
+Index: app/src/main/java/hu/matusz/travelapp/util/database/Callback.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database;\n\npublic interface Callback<T> {\n    void onAnswerReceived(T result);\n    void onError(Exception e);\n}\n
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java b/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/Callback.java	(date 1746718045726)
+@@ -3,4 +3,4 @@
+ public interface Callback<T> {
+     void onAnswerReceived(T result);
+     void onError(Exception e);
+-}
++}
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp;\n\nimport static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;\n\nimport android.content.Intent;\nimport android.os.Bundle;\nimport android.os.CancellationSignal;\nimport android.util.Log;\nimport android.widget.LinearLayout;\n\nimport androidx.annotation.NonNull;\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.credentials.ClearCredentialStateRequest;\nimport androidx.credentials.Credential;\nimport androidx.credentials.CredentialManager;\nimport androidx.credentials.CredentialManagerCallback;\nimport androidx.credentials.CustomCredential;\nimport androidx.credentials.GetCredentialRequest;\nimport androidx.credentials.GetCredentialResponse;\nimport androidx.credentials.exceptions.ClearCredentialException;\nimport androidx.credentials.exceptions.GetCredentialException;\nimport com.google.android.libraries.identity.googleid.GetGoogleIdOption;\nimport com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;\nimport com.google.firebase.auth.AuthCredential;\nimport com.google.firebase.auth.FirebaseAuth;\nimport com.google.firebase.auth.FirebaseUser;\nimport com.google.firebase.auth.GoogleAuthProvider;\n\nimport java.io.Serializable;\nimport java.util.List;\nimport java.util.concurrent.Executors;\n\nimport hu.matusz.travelapp.util.UUIDGen;\nimport hu.matusz.travelapp.util.animations.SimpleLoadingAnimation;\nimport hu.matusz.travelapp.util.database.Callback;\nimport hu.matusz.travelapp.util.database.FirestoreDataHandler;\nimport hu.matusz.travelapp.util.database.models.Comment;\nimport hu.matusz.travelapp.util.database.models.User;\n\n\npublic class GoogleSignInActivity extends AppCompatActivity {\n    private FirestoreDataHandler fc;\n    private UUIDGen u = new UUIDGen();\n    public User localUser;\n    private static final String GOOGLESIGNINLOGTAG = \"GoogleLoginInformation\";\n\n    private FirebaseAuth mAuth;\n    private CredentialManager credentialManager;\n    private SimpleLoadingAnimation sla;\n    private  LinearLayout containerLayout;\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        setContentView(R.layout.login_activity);\n\n        // Inicializálás MINDIG kell\n        mAuth = FirebaseAuth.getInstance();\n        fc = new FirestoreDataHandler();\n        fc.init();\n        u = new UUIDGen();\n        credentialManager = CredentialManager.create(getBaseContext());\n        containerLayout = findViewById(R.id.containerLayout);\n        sla = new SimpleLoadingAnimation(findViewById(R.id.loadingImage));\n        sla.startVariableSpeedRotation();\n\n        FirebaseUser currentUser = mAuth.getCurrentUser();\n\n        if (currentUser != null) {\n\n            fetchUserAndContinue(currentUser);\n        } else {\n\n            launchCredentialManager();\n        }\n    }\n\n    private void fetchUserAndContinue(FirebaseUser user) {\n        fc = new FirestoreDataHandler();\n        fc.init();\n        u = new UUIDGen();\n\n        fc.getUserByEmail(user.getEmail(), new Callback<User>() {\n            @Override\n            public void onAnswerReceived(User result) {\n                if (result != null) {\n                    localUser = result;\n                } else {\n                    localUser = new User();\n                    localUser.setUserId(u.getUUID());\n                    localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : \"\");\n                    localUser.setName(user.getDisplayName());\n                    localUser.setCountryOfOriginCode(\"\");\n                    localUser.setEmail(user.getEmail());\n                    fc.saveUser(localUser);\n                }\n\n                updateUI(user);\n            }\n\n            @Override\n            public void onError(Exception e) {\n                Log.e(GOOGLESIGNINLOGTAG, \"Hiba a felhasználó lekérdezésekor: \" + e.getMessage());\n            }\n        });\n    }\n\n\n\n    @Override\n    protected void onDestroy() {\n        super.onDestroy();\n        sla.destroy();\n    }\n\n\n    //+ Testing, no longer in use\n    public void firestoreTest(){\n        FirestoreDataHandler fc = new FirestoreDataHandler();\n        UUIDGen u = new UUIDGen();\n        String uu = u.getUUID();\n        fc.init();\n        //fc.saveUser(new User(uu, \"Teszt Elek\", \"teszt@teszt.hu\", \"HU\"));\n        fc.getUserById(uu, new Callback<User>() {\n            @Override\n            public void onAnswerReceived(User user) {\n                Log.d(\"FIRESTORE\", user.toString());\n            }\n\n            @Override\n            public void onError(Exception e) {\n                Log.e(\"FIRESTORE\", \"Hiba a felhasználó lekérdezésekor: \" + e.getMessage());\n            }\n        });\n        fc.saveComment(new Comment(uu, u.getUUID(), \"Teszt\", \"This is a test comment\", 6, u.getUUID()));\n        fc.getAllComment(new Callback<List<Comment>>() {\n            @Override\n            public void onAnswerReceived(List<Comment> result) {\n                for (int i = 0; i < result.size(); i++) {\n                    Log.d(\"FIRECOMMENT\", \"Comment #\"+(i+1)+\" \"+result.get(i).toString());\n                }\n            }\n\n            @Override\n            public void onError(Exception e) {\n                Log.d(\"FIRECOMMENT\", e.toString());\n            }\n        });\n    }\n    @Override\n    public void onStart() {\n        super.onStart();\n        FirebaseUser currentUser = mAuth.getCurrentUser();\n        updateUI(currentUser);\n    }\n\n    private void launchCredentialManager() {\n        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()\n                .setFilterByAuthorizedAccounts(false)\n                .setServerClientId(getString(R.string.default_web_client_id))\n                .build();\n\n        GetCredentialRequest request = new GetCredentialRequest.Builder()\n                .addCredentialOption(googleIdOption)\n                .build();\n        credentialManager.getCredentialAsync(\n                getBaseContext(),\n                request,\n                new CancellationSignal(),\n                Executors.newSingleThreadExecutor(),\n                new CredentialManagerCallback<>() {\n                    @Override\n                    public void onResult(GetCredentialResponse result) {\n                        handleSignIn(result.getCredential());\n                    }\n\n                    @Override\n                    public void onError(GetCredentialException e) {\n                        Log.e(GOOGLESIGNINLOGTAG, \"Couldn't retrieve user's credentials: \" + e.getLocalizedMessage());\n                        Log.e(GOOGLESIGNINLOGTAG, \"Error Type: \" + e.getClass().getSimpleName());\n                        Log.e(GOOGLESIGNINLOGTAG, \"Localized Message: \" + e.getLocalizedMessage());\n                        Log.e(GOOGLESIGNINLOGTAG, \"Full Exception: \", e);\n                    }\n                }\n        );\n    }\n\n\n    private void handleSignIn(Credential credential) {\n\n        if (credential instanceof CustomCredential customCredential\n                && credential.getType().equals(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {\n            Bundle credentialData = customCredential.getData();\n            GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credentialData);\n\n            firebaseAuthWithGoogle(googleIdTokenCredential.getIdToken());\n        } else {\n            Log.w(GOOGLESIGNINLOGTAG, \"Credential is not of type Google ID!\");\n        }\n    }\n    private void firebaseAuthWithGoogle(String idToken) {\n        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);\n        mAuth.signInWithCredential(credential)\n                .addOnCompleteListener(this, task -> {\n                    if (task.isSuccessful()) {\n\n                        Log.d(GOOGLESIGNINLOGTAG, \"signInWithCredential:success\");\n                        FirebaseUser user = mAuth.getCurrentUser();\n                        fc.getUserByEmail(user.getEmail(), new Callback<User>() {\n                            @Override\n                            public void onAnswerReceived(User result) {\n                                if (result != null && result.getEmail() != null && !result.getEmail().isEmpty()) {\n                                    localUser = result;\n                                }\n\n\n                                Log.d(\"LOGINTEST\", \"firebaseAuthWithGoogle: (success ág)\" + localUser.toString());\n                                updateUI(user);\n                            }\n\n                            @Override\n                            public void onError(Exception e) {\n                                localUser = new User();\n                                localUser.setUserId(u.getUUID());\n                                localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : \"\");\n                                localUser.setName(user.getDisplayName());\n                                localUser.setCountryOfOriginCode(\"\");\n                                localUser.setEmail(user.getEmail());\n                                fc.saveUser(localUser);\n                                Log.d(\"LOGINTEST\", \"firebaseAuthWithGoogle: (error ág)\" + localUser.toString());\n                            }\n                        });\n\n                        updateUI(user);\n                    } else {\n                        Log.w(GOOGLESIGNINLOGTAG, \"signInWithCredential:failure\", task.getException());\n                        updateUI(null);\n                    }\n                });\n    }\n    private void signOut() {\n        mAuth.signOut();\n\n        ClearCredentialStateRequest clearRequest = new ClearCredentialStateRequest();\n        credentialManager.clearCredentialStateAsync(\n                clearRequest,\n                new CancellationSignal(),\n                Executors.newSingleThreadExecutor(),\n                new CredentialManagerCallback<>() {\n                    @Override\n                    public void onResult(@NonNull Void result) {\n                        updateUI(null);\n                    }\n\n                    @Override\n                    public void onError(@NonNull ClearCredentialException e) {\n                        Log.e(GOOGLESIGNINLOGTAG, \"Couldn't clear user credentials: \" + e.getLocalizedMessage());\n                    }\n                });\n    }\n    private void updateUI(FirebaseUser user) {\n        if(localUser!=null){\n            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, UserActivity.class);\n            loggedInIntent.putExtra(\"user\", localUser);\n            sla.destroy();\n            startActivity(loggedInIntent);\n        }\n    }\n}
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java b/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java
+--- a/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java	(date 1746637202521)
+@@ -259,7 +259,7 @@
+     }
+     private void updateUI(FirebaseUser user) {
+         if(localUser!=null){
+-            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, UserActivity.class);
++            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, MainActivity.class);
+             loggedInIntent.putExtra("user", localUser);
+             sla.destroy();
+             startActivity(loggedInIntent);
+Index: app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.util.database;\n\nimport android.util.Log;\n\nimport androidx.annotation.NonNull;\n\nimport com.google.android.gms.tasks.OnCompleteListener;\nimport com.google.android.gms.tasks.OnFailureListener;\nimport com.google.android.gms.tasks.OnSuccessListener;\nimport com.google.android.gms.tasks.Task;\nimport com.google.firebase.firestore.DocumentReference;\nimport com.google.firebase.firestore.FirebaseFirestore;\nimport com.google.firebase.firestore.QueryDocumentSnapshot;\nimport com.google.firebase.firestore.QuerySnapshot;\n\nimport java.net.ConnectException;\nimport java.util.ArrayList;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\n\nimport hu.matusz.travelapp.util.database.models.Comment;\nimport hu.matusz.travelapp.util.database.models.GeoLocation;\nimport hu.matusz.travelapp.util.database.models.User;\n\n/**\n * This class is responsible to handle the connection between the <i>remote database</i> and the <i>app</i>. <br>\n * <b>Usage</b>: Before using it, connection has to be initiated with <b style=\"color: rgb(240,240,30);\">init()</b>.\n * @author matusz\n * @version v2\n * {}\n */\npublic class FirestoreDataHandler{\n\n\n    FirebaseFirestore firestore;\n\n    /**\n     * Initiate connection\n     */\n    public void init(){\n        firestore = FirebaseFirestore.getInstance();\n    }\n\n    /**\n     * Drop Connection\n     * @throws ConnectException\n     */\n    public void voidConnection() throws ConnectException {\n        firestore = null;\n        Log.w(\"FIRESTORE\",\"Connection dropped\");\n        throw new ConnectException(\"Database connection voided\");\n    }\n    public FirestoreDataHandler() {\n    }\n\n    /**\n     * Saves user to <i style=\"color: red\">Firestore</i>\n     * @author Matusz\n     * @version v1\n     * @param user a non-null <b>User</b>, only defined after log-in process.\n     * @see User\n     */\n    public void saveUser(@NonNull User user){\n        Map<String, String> userMap = new HashMap<>();\n        userMap.put(\"id\", user.getUserId());\n        userMap.put(\"name\", user.getName());\n        userMap.put(\"cc\", user.getCountryOfOriginCode());\n        userMap.put(\"email\", user.getEmail());\n        userMap.put(\"pic\", user.getPhotoURI());\n\n        firestore.collection(\"users\").add(userMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {\n            @Override\n            public void onSuccess(DocumentReference documentReference) {\n                Log.d(\"FIRESTORE\",\"Sikeres mentés az adatbázisba ezzel az ID-vel: \"+ documentReference.getId()+\"\\t Firestore: \"+ documentReference.getFirestore());\n            }\n        }).addOnFailureListener(new OnFailureListener() {\n            @Override\n            public void onFailure(@NonNull Exception e) {\n                Log.w(\"FIRESTORE\", \"Kritikus hiba:\\t\", e);\n            }\n        });\n    }\n    /**\n     * Search and read a specific comment from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param userId Primary identifer for <i>users</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see User\n     */\n\n    public void getUserById(String userId, Callback<User> callback) {\n        firestore.collection(\"users\")\n                .whereEqualTo(\"id\", userId)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> userData = document.getData();\n\n                                User targetUser = new User();\n                                targetUser.setUserId((String) userData.get(\"id\"));\n                                targetUser.setName((String) userData.get(\"name\"));\n                                targetUser.setCountryOfOriginCode((String) userData.get(\"cc\"));\n                                targetUser.setEmail((String) userData.get(\"email\"));\n                                targetUser.setPhotoURI((String) userData.get(\"pic\"));\n                                callback.onAnswerReceived(targetUser);\n                            } else {\n                                callback.onError(new Exception(\"User not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n\n    }\n\n\n    /**\n     * Search and read a specific comment from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param email Email identifer for <i>users</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see User\n     */\n\n    public void getUserByEmail(String email, Callback<User> callback) {\n        firestore.collection(\"users\")\n                .whereEqualTo(\"email\", email)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> userData = document.getData();\n\n                                User targetUser = new User();\n                                targetUser.setUserId((String) userData.get(\"id\"));\n                                targetUser.setName((String) userData.get(\"name\"));\n                                targetUser.setCountryOfOriginCode((String) userData.get(\"cc\"));\n                                targetUser.setEmail((String) userData.get(\"email\"));\n                                targetUser.setPhotoURI((String) userData.get(\"pic\"));\n                                callback.onAnswerReceived(targetUser);\n                            } else {\n                                callback.onError(new Exception(\"User not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n\n    }\n\n    /**\n     * Saves comment to <i style=\"color: red\">Firestore</i>\n     * @author Matusz\n     * @version v1\n     * @param comment a non-null <b>Comment</b>.\n     * @see Comment\n     */\n    public void saveComment(@NonNull Comment comment){\n        Map<String, String> commentMap = new HashMap<>();\n        commentMap.put(\"userId\",comment.getUserId());\n        commentMap.put(\"commentId\", comment.getCommentId());\n        commentMap.put(\"geoId\", comment.getGeoId());\n        commentMap.put(\"comment\", comment.getComment());\n        commentMap.put(\"rate\", comment.getRate()+\"\");\n        commentMap.put(\"title\", comment.getTitle());\n\n        firestore.collection(\"comments\").add(commentMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {\n            @Override\n            public void onSuccess(DocumentReference documentReference) {\n                Log.d(\"FIRESTORE\",\"Sikeres mentés az adatbázisba ezzel az ID-vel: \"+ documentReference.getId()+\"\\t Firestore: \"+ documentReference.getFirestore());\n            }\n        }).addOnFailureListener(new OnFailureListener() {\n            @Override\n            public void onFailure(@NonNull Exception e) {\n                Log.w(\"FIRESTORE\", \"Kritikus hiba:\\t\", e);\n            }\n        });\n    }\n\n    /**\n     * Search and read a specific comment from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param commentId Primary identifer for <i>comment</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see Comment\n     */\n    public void getCommentById(String commentId, Callback<Comment> callback) {\n        firestore.collection(\"comments\")\n                .whereEqualTo(\"id\", commentId)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> commentData = document.getData();\n\n                                Comment targetComment = new Comment();\n                                targetComment.setUserId((String) commentData.get(\"userId\"));\n                                targetComment.setCommentId((String) commentData.get(\"commentId\"));\n                                targetComment.setComment((String) commentData.get(\"comment\"));\n                                targetComment.setRate(Integer.parseInt((String) commentData.get(\"rate\")));\n                                targetComment.setTitle((String) commentData.get(\"title\"));\n                                targetComment.setGeoId((String) commentData.get(\"geoId\"));\n\n                                callback.onAnswerReceived(targetComment);\n                            } else {\n                                callback.onError(new Exception(\"Comment not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n\n    }\n    public void getAllComment(Callback<List<Comment>> callback)\n    {\n        firestore.collection(\"comments\")\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            List<Comment> store = new ArrayList<>();\n                            for (QueryDocumentSnapshot document : task.getResult()) {\n                                Map<String, Object> commentData = document.getData();\n\n                                Comment targetComment = new Comment();\n                                targetComment.setUserId((String) commentData.get(\"userId\"));\n                                targetComment.setCommentId((String) commentData.get(\"commentId\"));\n                                targetComment.setComment((String) commentData.get(\"comment\"));\n                                targetComment.setRate((Integer.parseInt((String) commentData.get(\"rate\"))));\n                                targetComment.setTitle((String) commentData.get(\"title\"));\n                                targetComment.setGeoId((String) commentData.get(\"geoId\"));\n                                store.add(targetComment);\n                            }\n                            callback.onAnswerReceived(store);\n                        } else {\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n    }\n\n    /**\n     * Saves Location pin to <i style=\"color: red\">Firestore</i>\n     * @author Matusz\n     * @version v1\n     * @param geo a non-null <b>GeoLocation</b>.\n     * @see GeoLocation\n     */\n    public void saveLocation(@NonNull GeoLocation geo){\n        Map<String, String> locationMap = new HashMap<>();\n        locationMap.put(\"geoId\",geo.getGeoId());\n        locationMap.put(\"name\",geo.getPOI_name());\n        locationMap.put(\"x\",geo.getCoordX()+\"\");\n        locationMap.put(\"y\",geo.getCoordY()+\"\");\n\n        firestore.collection(\"locations\").add(locationMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {\n            @Override\n            public void onSuccess(DocumentReference documentReference) {\n                Log.d(\"FIRESTORE\",\"Sikeres mentés az adatbázisba ezzel az ID-vel: \"+ documentReference.getId()+\"\\t Firestore: \"+ documentReference.getFirestore());\n            }\n        }).addOnFailureListener(new OnFailureListener() {\n            @Override\n            public void onFailure(@NonNull Exception e) {\n                Log.w(\"FIRESTORE\", \"Kritikus hiba:\\t\", e);\n            }\n        });\n    }\n\n    /**\n     * Search and read a specific location from <i style=\"color: red\">Firestore</i>.\n     * @author Matusz\n     * @version v1\n     * @param locationId Primary identifer for <i>comment</i>\n     * @param callback Interface separeting the cloud function from the main thread.\n     * @see GeoLocation\n     */\n    public void getLocationById(String locationId, Callback<GeoLocation> callback) {\n        firestore.collection(\"locations\")\n                .whereEqualTo(\"id\", locationId)\n                .get()\n                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {\n                    @Override\n                    public void onComplete(@NonNull Task<QuerySnapshot> task) {\n                        if (task.isSuccessful()) {\n                            if (!task.getResult().isEmpty()) {\n                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);\n                                Map<String, Object> locationData = document.getData();\n\n                                GeoLocation targetLocation = new GeoLocation();\n                                targetLocation.setGeoId((String) locationData.get(\"geoId\"));\n                                targetLocation.setPOI_name((String) locationData.get(\"name\"));\n                                targetLocation.setCoordX(Double.parseDouble((String) locationData.get(\"x\")));\n                                targetLocation.setCoordY(Double.parseDouble((String) locationData.get(\"y\")));\n\n                                callback.onAnswerReceived(targetLocation);\n                            } else {\n                                callback.onError(new Exception(\"Location not found\"));\n                            }\n                        } else {\n                            Log.w(\"FIRESTORE\", \"Error getting documents.\", task.getException());\n                            callback.onError(task.getException());\n                        }\n                    }\n                });\n    }\n\n\n}\n
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java b/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java	(date 1747230877287)
+@@ -28,7 +28,7 @@
+  * <b>Usage</b>: Before using it, connection has to be initiated with <b style="color: rgb(240,240,30);">init()</b>.
+  * @author matusz
+  * @version v2
+- * {}
++ * @see Callback
+  */
+ public class FirestoreDataHandler{
+ 
+@@ -36,7 +36,7 @@
+     FirebaseFirestore firestore;
+ 
+     /**
+-     * Initiate connection
++     * Initiate connection. <b>Must be used before any calls to the cloud.</b>
+      */
+     public void init(){
+         firestore = FirebaseFirestore.getInstance();
+@@ -89,7 +89,6 @@
+      * @param callback Interface separeting the cloud function from the main thread.
+      * @see User
+      */
+-
+     public void getUserById(String userId, Callback<User> callback) {
+         firestore.collection("users")
+                 .whereEqualTo("id", userId)
+@@ -201,7 +200,7 @@
+      */
+     public void getCommentById(String commentId, Callback<Comment> callback) {
+         firestore.collection("comments")
+-                .whereEqualTo("id", commentId)
++                .whereEqualTo("commentId", commentId)
+                 .get()
+                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                     @Override
+@@ -231,6 +230,13 @@
+                 });
+ 
+     }
++    /**
++     * Search and read all comments from <i style="color: red">Firestore</i>.
++     * @author Matusz
++     * @version v1
++     * @param callback Interface separeting the cloud function from the main thread.
++     * @see Comment
++     */
+     public void getAllComment(Callback<List<Comment>> callback)
+     {
+         firestore.collection("comments")
+@@ -288,7 +294,7 @@
+     }
+ 
+     /**
+-     * Search and read a specific location from <i style="color: red">Firestore</i>.
++     * Read a specific location from <i style="color: red">Firestore</i>.
+      * @author Matusz
+      * @version v1
+      * @param locationId Primary identifer for <i>comment</i>
+@@ -297,7 +303,7 @@
+      */
+     public void getLocationById(String locationId, Callback<GeoLocation> callback) {
+         firestore.collection("locations")
+-                .whereEqualTo("id", locationId)
++                .whereEqualTo("geoId", locationId)
+                 .get()
+                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                     @Override
+@@ -324,6 +330,37 @@
+                     }
+                 });
+     }
+-
+-
++    /**
++     * Read all locations from <i style="color: red">Firestore</i>.
++     * @author Matusz
++     * @version v1
++     * @param callback Interface separeting the cloud function from the main thread.
++     * @see GeoLocation
++     */
++    public void getAllLocation(Callback<List<GeoLocation>> callback)
++    {
++        firestore.collection("locations")
++                .get()
++                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
++                    @Override
++                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
++                        if (task.isSuccessful()) {
++                            List<GeoLocation> store = new ArrayList<>();
++                            for (QueryDocumentSnapshot document : task.getResult()) {
++                                Map<String, Object> locationData = document.getData();
++
++                                GeoLocation targetLocation = new GeoLocation();
++                                targetLocation.setGeoId((String) locationData.get("geoId"));
++                                targetLocation.setPOI_name((String) locationData.get("name"));
++                                targetLocation.setCoordX(Double.parseDouble((String) locationData.get("x")));
++                                targetLocation.setCoordY(Double.parseDouble((String) locationData.get("y")));
++                                store.add(targetLocation);
++                            }
++                            callback.onAnswerReceived(store);
++                        } else {
++                            callback.onError(task.getException());
++                        }
++                    }
++                });
++    }
+ }

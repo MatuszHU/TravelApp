@@ -1,0 +1,1768 @@
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\">\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\n        android:fullBackupContent=\"@xml/backup_rules\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.TravelApp\"\n        tools:targetApi=\"31\">\n        <activity\n            android:name=\".UserActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity android:name=\".GoogleSignInActivity\" />\n\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/AndroidManifest.xml	(date 1748949917594)
+@@ -2,8 +2,11 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools">
+ 
++    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
++    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+     <uses-permission android:name="android.permission.INTERNET" />
+ 
++
+     <application
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+@@ -15,9 +18,6 @@
+         android:theme="@style/Theme.TravelApp"
+         tools:targetApi="31">
+         <activity
+-            android:name=".UserActivity"
+-            android:exported="false" />
+-        <activity
+             android:name=".MainActivity"
+             android:exported="true">
+             <intent-filter>
+@@ -26,8 +26,6 @@
+                 <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
+         </activity>
+-        <activity android:name=".GoogleSignInActivity" />
+-
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java b/app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/SQLSelect.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,31 +0,0 @@
+-package hu.matusz.travelapp.util.database;
+-import java.sql.Connection;
+-import java.sql.SQLException;
+-import java.sql.Statement;
+-import java.sql.ResultSet;
+-
+-/**
+- * @author Máté
+- * @deprecated 17.04 -- Android does not support it
+- * This class is to get SQL data with SELECT statement. It is dependent on ConnectionManagement and remote SQL database.
+- * @version v1 - written on the plane, so no connection to the database. But the code compiles
+- */
+-public class SQLSelect {
+-    ResultSet res = null;
+-    ConnectionManager connectionManager = new ConnectionManager();
+-    Statement statement = null;
+-    public ResultSet getData(String selectStatement){
+-
+-
+-        Connection conn = connectionManager.databaseConnect();
+-        try {
+-            statement = conn.createStatement();
+-            res = statement.executeQuery(selectStatement);
+-
+-        } catch (SQLException e) {
+-            throw new RuntimeException(e.toString()+" -- MM05");
+-        }
+-        if (res != null) return res;
+-        else return null;
+-    }
+-}
+Index: app/src/main/java/hu/matusz/travelapp/util/database/models/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java b/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/models/User.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,82 +0,0 @@
+-package hu.matusz.travelapp.util.database.models;
+-
+-import java.io.Serializable;
+-
+-public class User implements Serializable {
+-    private String userId;
+-    private String name;
+-    private String email;
+-    private String countryOfOriginCode;
+-    private String photoURI;
+-
+-
+-    public User() {
+-
+-    }
+-
+-    @Override
+-    public String toString() {
+-        return "User{" +
+-                "userId='" + userId + '\'' +
+-                ", name='" + name + '\'' +
+-                ", email='" + email + '\'' +
+-                ", countryOfOriginCode='" + countryOfOriginCode + '\'' +
+-                ", photoURI='" + photoURI + '\'' +
+-                '}';
+-    }
+-
+-    public User(String userId, String name, String email, String photoURI) {
+-        this.userId = userId;
+-        this.name = name;
+-        this.email = email;
+-        this.photoURI = photoURI;
+-        this.countryOfOriginCode = "";
+-    }
+-
+-    public User(String userId, String name, String email) {
+-        this.userId = userId;
+-        this.name = name;
+-        this.email = email;
+-        this.countryOfOriginCode = "";
+-    }
+-
+-    public String getUserId() {
+-        return userId;
+-    }
+-
+-    public void setUserId(String userId) {
+-        this.userId = userId;
+-    }
+-
+-    public String getName() {
+-        return name;
+-    }
+-
+-    public void setName(String name) {
+-        this.name = name;
+-    }
+-
+-    public String getEmail() {
+-        return email;
+-    }
+-
+-    public void setEmail(String email) {
+-        this.email = email;
+-    }
+-
+-    public String getCountryOfOriginCode() {
+-        return countryOfOriginCode;
+-    }
+-
+-    public void setCountryOfOriginCode(String countryOfOriginCode) {
+-        this.countryOfOriginCode = countryOfOriginCode;
+-    }
+-
+-    public String getPhotoURI() {
+-        return photoURI;
+-    }
+-
+-    public void setPhotoURI(String photoURI) {
+-        this.photoURI = photoURI;
+-    }
+-}
+\ No newline at end of file
+Index: gradle/google-services.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/gradle/google-services.json b/gradle/google-services.json
+deleted file mode 100644
+--- a/gradle/google-services.json	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,47 +0,0 @@
+-{
+-  "project_info": {
+-    "project_number": "853429563864",
+-    "project_id": "travelapp2025erasmus",
+-    "storage_bucket": "travelapp2025erasmus.firebasestorage.app"
+-  },
+-  "client": [
+-    {
+-      "client_info": {
+-        "mobilesdk_app_id": "1:853429563864:android:f399944474392fcc2902ad",
+-        "android_client_info": {
+-          "package_name": "hu.matusz.travelapp"
+-        }
+-      },
+-      "oauth_client": [
+-        {
+-          "client_id": "853429563864-o4914hv47ifilvbmonif04obcq0ufpak.apps.googleusercontent.com",
+-          "client_type": 1,
+-          "android_info": {
+-            "package_name": "hu.matusz.travelapp",
+-            "certificate_hash": "b50342ef953f4e212905c0d89c5f34f433069f14"
+-          }
+-        },
+-        {
+-          "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+-          "client_type": 3
+-        }
+-      ],
+-      "api_key": [
+-        {
+-          "current_key": "AIzaSyA4JkI_5ih_F0wJmiE3m33Zo4CEwWnP5uM"
+-        }
+-      ],
+-      "services": {
+-        "appinvite_service": {
+-          "other_platform_oauth_client": [
+-            {
+-              "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+-              "client_type": 3
+-            }
+-          ]
+-        }
+-      }
+-    }
+-  ],
+-  "configuration_version": "1"
+-}
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_main.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/activity_main.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,59 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:id="@+id/main"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    android:padding="24dp"
+-    android:background="#F9F9F9">
+-
+-    <View
+-        android:id="@+id/backgroundTint"
+-        android:layout_width="match_parent"
+-        android:layout_height="match_parent"
+-        android:background="@color/background_red"
+-        android:alpha="0.07" />
+-
+-    <LinearLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="wrap_content"
+-        android:orientation="vertical"
+-        android:gravity="center"
+-        android:layout_gravity="center">
+-
+-        <ImageView
+-            android:id="@+id/logoImage"
+-            android:layout_width="220dp"
+-            android:layout_height="220dp"
+-            android:src="@drawable/ipsantarem"
+-            android:contentDescription="Logo"
+-            android:layout_marginTop="96dp"/>
+-
+-        <TextView
+-            android:id="@+id/welcomeText"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:text="Welcome"
+-            android:textSize="40sp"
+-            android:textColor="#1C1C1E"
+-            android:textStyle="bold"
+-            android:layout_marginTop="48dp" />
+-
+-        <TextView
+-            android:id="@+id/subText"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:text="Please sign in to continue"
+-            android:textSize="18sp"
+-            android:textColor="#6C6C70"
+-            android:layout_marginTop="16dp" />
+-
+-        <!-- Google Sign-In Button -->
+-        <com.google.android.gms.common.SignInButton
+-            android:id="@+id/btnGoogleSignIn"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="64dp" />
+-
+-    </LinearLayout>
+-
+-</FrameLayout>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java b/app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/ConnectionManager.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,33 +0,0 @@
+-package hu.matusz.travelapp.util.database;
+-import java.sql.Connection;
+-import java.sql.DriverManager;
+-import java.sql.SQLException;
+-
+-/**
+- * @author Máté
+- * @deprecated 17.04 -- Android does not support it
+- * @version v1
+- */
+-class ConnectionManager {
+-    static void load() {
+-        try {
+-            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+-        } catch (Exception e) {
+-            System.err.println("Failed to load Connection Manager Driver! MM01 -- " + e.toString());
+-        }
+-    }
+-    Connection databaseConnect() {
+-
+-        Connection dataConnection;
+-        try {
+-            load();
+-            dataConnection = DriverManager.getConnection("bodma.dyndns.org:5155");
+-            return dataConnection;
+-        } catch (SQLException e) {
+-            System.out.println("SQLException: MM02 -- " + e.getMessage());
+-            System.out.println("SQLState: MM03 --" + e.getSQLState());
+-            System.out.println("VendorError: MM04 --" + e.getErrorCode());
+-            return null;
+-        }
+-    }
+-}
+Index: app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java b/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/models/Comment.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,84 +0,0 @@
+-package hu.matusz.travelapp.util.database.models;
+-
+-public class Comment {
+-    private String userId;
+-    private String commentId;
+-    private String title;
+-    private String comment;
+-    private int rate;
+-    private String geoId;
+-
+-
+-    public Comment() {
+-
+-    }
+-
+-    public Comment(String userId, String commentId, String title, String comment, int rate, String geoId) {
+-        this.userId = userId;
+-        this.commentId = commentId;
+-        this.title = title;
+-        this.comment = comment;
+-        this.rate = rate;
+-        this.geoId = geoId;
+-    }
+-
+-    public String getUserId() {
+-        return userId;
+-    }
+-
+-    public void setUserId(String userId) {
+-        this.userId = userId;
+-    }
+-
+-    public String getCommentId() {
+-        return commentId;
+-    }
+-
+-    public void setCommentId(String commentId) {
+-        this.commentId = commentId;
+-    }
+-
+-    public String getTitle() {
+-        return title;
+-    }
+-
+-    public void setTitle(String title) {
+-        this.title = title;
+-    }
+-
+-    public String getComment() {
+-        return comment;
+-    }
+-
+-    public void setComment(String comment) {
+-        this.comment = comment;
+-    }
+-
+-    public int getRate() {
+-        return rate;
+-    }
+-
+-    public void setRate(int rate) {
+-        this.rate = rate;
+-    }
+-
+-    public String getGeoId() {
+-        return geoId;
+-    }
+-
+-    public void setGeoId(String geoId) {
+-        this.geoId = geoId;
+-    }
+-
+-    @Override
+-    public String   toString() {
+-        return "Comment{" +
+-                "userId='" + userId + '\'' +
+-                ", commentId='" + commentId + '\'' +
+-                ", title='" + title + '\'' +
+-                ", comment='" + comment + '\'' +
+-                ", rate=" + rate +
+-                ", geoId='" + geoId + '\'' +
+-                '}';
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java b/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/models/GeoLocation.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,50 +0,0 @@
+-package hu.matusz.travelapp.util.database.models;
+-
+-public class GeoLocation {
+-    private double coordX;
+-    private double coordY;
+-    private String POI_name;
+-    private String geoId;
+-    public GeoLocation() {
+-
+-    }
+-
+-    public GeoLocation(double coordX, double coordY, String POI_name, String geoId) {
+-        this.coordX = coordX;
+-        this.coordY = coordY;
+-        this.POI_name = POI_name;
+-        this.geoId = geoId;
+-    }
+-
+-    public double getCoordX() {
+-        return coordX;
+-    }
+-
+-    public void setCoordX(double coordX) {
+-        this.coordX = coordX;
+-    }
+-
+-    public double getCoordY() {
+-        return coordY;
+-    }
+-
+-    public void setCoordY(double coordY) {
+-        this.coordY = coordY;
+-    }
+-
+-    public String getPOI_name() {
+-        return POI_name;
+-    }
+-
+-    public void setPOI_name(String POI_name) {
+-        this.POI_name = POI_name;
+-    }
+-
+-    public String getGeoId() {
+-        return geoId;
+-    }
+-
+-    public void setGeoId(String geoId) {
+-        this.geoId = geoId;
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java b/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/UUIDGen.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,24 +0,0 @@
+-package hu.matusz.travelapp.util;
+-
+-import java.util.UUID;
+-/**
+- * Litteraly just to quickly grab a <b style="color: aqua; ">UUID</b> for all the different IDs I have implemented. <br> Using UUIDv4
+- * @author Matusz
+- * @version v1
+- */
+-public class UUIDGen {
+-    public UUIDGen(){}
+-    private static String test = null;
+-    public String getUUID(){
+-        return UUID.randomUUID().toString();
+-    }
+-
+-    /**
+-     * <b style="color: red; font-size: 40px">For testing only. <br> DO NOT FORGET TO REMOVE</b>
+-     * @author Matusz
+-     *
+-     */
+-    public void setGlobalUUID(){
+-        test = getUUID();
+-    }
+-}
+Index: app/src/main/res/layout/login_activity.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/login_activity.xml b/app/src/main/res/layout/login_activity.xml
+deleted file mode 100644
+--- a/app/src/main/res/layout/login_activity.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,18 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:id="@+id/containerLayout"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    android:orientation="vertical"
+-    android:padding="16dp">
+-
+-    <ImageView
+-        android:id="@+id/loadingImage"
+-        android:layout_width="200dp"
+-        android:layout_height="200dp"
+-        android:layout_gravity="center"
+-        android:layout_weight="1"
+-        android:layout_centerInParent="true"
+-        android:contentDescription="Loading image"
+-        android:src="@drawable/ipsantarem" />
+-</LinearLayout>
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java b/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/FirestoreDataHandler.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,329 +0,0 @@
+-package hu.matusz.travelapp.util.database;
+-
+-import android.util.Log;
+-
+-import androidx.annotation.NonNull;
+-
+-import com.google.android.gms.tasks.OnCompleteListener;
+-import com.google.android.gms.tasks.OnFailureListener;
+-import com.google.android.gms.tasks.OnSuccessListener;
+-import com.google.android.gms.tasks.Task;
+-import com.google.firebase.firestore.DocumentReference;
+-import com.google.firebase.firestore.FirebaseFirestore;
+-import com.google.firebase.firestore.QueryDocumentSnapshot;
+-import com.google.firebase.firestore.QuerySnapshot;
+-
+-import java.net.ConnectException;
+-import java.util.ArrayList;
+-import java.util.HashMap;
+-import java.util.List;
+-import java.util.Map;
+-
+-import hu.matusz.travelapp.util.database.models.Comment;
+-import hu.matusz.travelapp.util.database.models.GeoLocation;
+-import hu.matusz.travelapp.util.database.models.User;
+-
+-/**
+- * This class is responsible to handle the connection between the <i>remote database</i> and the <i>app</i>. <br>
+- * <b>Usage</b>: Before using it, connection has to be initiated with <b style="color: rgb(240,240,30);">init()</b>.
+- * @author matusz
+- * @version v2
+- * {}
+- */
+-public class FirestoreDataHandler{
+-
+-
+-    FirebaseFirestore firestore;
+-
+-    /**
+-     * Initiate connection
+-     */
+-    public void init(){
+-        firestore = FirebaseFirestore.getInstance();
+-    }
+-
+-    /**
+-     * Drop Connection
+-     * @throws ConnectException
+-     */
+-    public void voidConnection() throws ConnectException {
+-        firestore = null;
+-        Log.w("FIRESTORE","Connection dropped");
+-        throw new ConnectException("Database connection voided");
+-    }
+-    public FirestoreDataHandler() {
+-    }
+-
+-    /**
+-     * Saves user to <i style="color: red">Firestore</i>
+-     * @author Matusz
+-     * @version v1
+-     * @param user a non-null <b>User</b>, only defined after log-in process.
+-     * @see User
+-     */
+-    public void saveUser(@NonNull User user){
+-        Map<String, String> userMap = new HashMap<>();
+-        userMap.put("id", user.getUserId());
+-        userMap.put("name", user.getName());
+-        userMap.put("cc", user.getCountryOfOriginCode());
+-        userMap.put("email", user.getEmail());
+-        userMap.put("pic", user.getPhotoURI());
+-
+-        firestore.collection("users").add(userMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+-            @Override
+-            public void onSuccess(DocumentReference documentReference) {
+-                Log.d("FIRESTORE","Sikeres mentés az adatbázisba ezzel az ID-vel: "+ documentReference.getId()+"\t Firestore: "+ documentReference.getFirestore());
+-            }
+-        }).addOnFailureListener(new OnFailureListener() {
+-            @Override
+-            public void onFailure(@NonNull Exception e) {
+-                Log.w("FIRESTORE", "Kritikus hiba:\t", e);
+-            }
+-        });
+-    }
+-    /**
+-     * Search and read a specific comment from <i style="color: red">Firestore</i>.
+-     * @author Matusz
+-     * @version v1
+-     * @param userId Primary identifer for <i>users</i>
+-     * @param callback Interface separeting the cloud function from the main thread.
+-     * @see User
+-     */
+-
+-    public void getUserById(String userId, Callback<User> callback) {
+-        firestore.collection("users")
+-                .whereEqualTo("id", userId)
+-                .get()
+-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+-                    @Override
+-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+-                        if (task.isSuccessful()) {
+-                            if (!task.getResult().isEmpty()) {
+-                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+-                                Map<String, Object> userData = document.getData();
+-
+-                                User targetUser = new User();
+-                                targetUser.setUserId((String) userData.get("id"));
+-                                targetUser.setName((String) userData.get("name"));
+-                                targetUser.setCountryOfOriginCode((String) userData.get("cc"));
+-                                targetUser.setEmail((String) userData.get("email"));
+-                                targetUser.setPhotoURI((String) userData.get("pic"));
+-                                callback.onAnswerReceived(targetUser);
+-                            } else {
+-                                callback.onError(new Exception("User not found"));
+-                            }
+-                        } else {
+-                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
+-                            callback.onError(task.getException());
+-                        }
+-                    }
+-                });
+-
+-    }
+-
+-
+-    /**
+-     * Search and read a specific comment from <i style="color: red">Firestore</i>.
+-     * @author Matusz
+-     * @version v1
+-     * @param email Email identifer for <i>users</i>
+-     * @param callback Interface separeting the cloud function from the main thread.
+-     * @see User
+-     */
+-
+-    public void getUserByEmail(String email, Callback<User> callback) {
+-        firestore.collection("users")
+-                .whereEqualTo("email", email)
+-                .get()
+-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+-                    @Override
+-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+-                        if (task.isSuccessful()) {
+-                            if (!task.getResult().isEmpty()) {
+-                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+-                                Map<String, Object> userData = document.getData();
+-
+-                                User targetUser = new User();
+-                                targetUser.setUserId((String) userData.get("id"));
+-                                targetUser.setName((String) userData.get("name"));
+-                                targetUser.setCountryOfOriginCode((String) userData.get("cc"));
+-                                targetUser.setEmail((String) userData.get("email"));
+-                                targetUser.setPhotoURI((String) userData.get("pic"));
+-                                callback.onAnswerReceived(targetUser);
+-                            } else {
+-                                callback.onError(new Exception("User not found"));
+-                            }
+-                        } else {
+-                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
+-                            callback.onError(task.getException());
+-                        }
+-                    }
+-                });
+-
+-    }
+-
+-    /**
+-     * Saves comment to <i style="color: red">Firestore</i>
+-     * @author Matusz
+-     * @version v1
+-     * @param comment a non-null <b>Comment</b>.
+-     * @see Comment
+-     */
+-    public void saveComment(@NonNull Comment comment){
+-        Map<String, String> commentMap = new HashMap<>();
+-        commentMap.put("userId",comment.getUserId());
+-        commentMap.put("commentId", comment.getCommentId());
+-        commentMap.put("geoId", comment.getGeoId());
+-        commentMap.put("comment", comment.getComment());
+-        commentMap.put("rate", comment.getRate()+"");
+-        commentMap.put("title", comment.getTitle());
+-
+-        firestore.collection("comments").add(commentMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+-            @Override
+-            public void onSuccess(DocumentReference documentReference) {
+-                Log.d("FIRESTORE","Sikeres mentés az adatbázisba ezzel az ID-vel: "+ documentReference.getId()+"\t Firestore: "+ documentReference.getFirestore());
+-            }
+-        }).addOnFailureListener(new OnFailureListener() {
+-            @Override
+-            public void onFailure(@NonNull Exception e) {
+-                Log.w("FIRESTORE", "Kritikus hiba:\t", e);
+-            }
+-        });
+-    }
+-
+-    /**
+-     * Search and read a specific comment from <i style="color: red">Firestore</i>.
+-     * @author Matusz
+-     * @version v1
+-     * @param commentId Primary identifer for <i>comment</i>
+-     * @param callback Interface separeting the cloud function from the main thread.
+-     * @see Comment
+-     */
+-    public void getCommentById(String commentId, Callback<Comment> callback) {
+-        firestore.collection("comments")
+-                .whereEqualTo("id", commentId)
+-                .get()
+-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+-                    @Override
+-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+-                        if (task.isSuccessful()) {
+-                            if (!task.getResult().isEmpty()) {
+-                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+-                                Map<String, Object> commentData = document.getData();
+-
+-                                Comment targetComment = new Comment();
+-                                targetComment.setUserId((String) commentData.get("userId"));
+-                                targetComment.setCommentId((String) commentData.get("commentId"));
+-                                targetComment.setComment((String) commentData.get("comment"));
+-                                targetComment.setRate(Integer.parseInt((String) commentData.get("rate")));
+-                                targetComment.setTitle((String) commentData.get("title"));
+-                                targetComment.setGeoId((String) commentData.get("geoId"));
+-
+-                                callback.onAnswerReceived(targetComment);
+-                            } else {
+-                                callback.onError(new Exception("Comment not found"));
+-                            }
+-                        } else {
+-                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
+-                            callback.onError(task.getException());
+-                        }
+-                    }
+-                });
+-
+-    }
+-    public void getAllComment(Callback<List<Comment>> callback)
+-    {
+-        firestore.collection("comments")
+-                .get()
+-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+-                    @Override
+-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+-                        if (task.isSuccessful()) {
+-                            List<Comment> store = new ArrayList<>();
+-                            for (QueryDocumentSnapshot document : task.getResult()) {
+-                                Map<String, Object> commentData = document.getData();
+-
+-                                Comment targetComment = new Comment();
+-                                targetComment.setUserId((String) commentData.get("userId"));
+-                                targetComment.setCommentId((String) commentData.get("commentId"));
+-                                targetComment.setComment((String) commentData.get("comment"));
+-                                targetComment.setRate((Integer.parseInt((String) commentData.get("rate"))));
+-                                targetComment.setTitle((String) commentData.get("title"));
+-                                targetComment.setGeoId((String) commentData.get("geoId"));
+-                                store.add(targetComment);
+-                            }
+-                            callback.onAnswerReceived(store);
+-                        } else {
+-                            callback.onError(task.getException());
+-                        }
+-                    }
+-                });
+-    }
+-
+-    /**
+-     * Saves Location pin to <i style="color: red">Firestore</i>
+-     * @author Matusz
+-     * @version v1
+-     * @param geo a non-null <b>GeoLocation</b>.
+-     * @see GeoLocation
+-     */
+-    public void saveLocation(@NonNull GeoLocation geo){
+-        Map<String, String> locationMap = new HashMap<>();
+-        locationMap.put("geoId",geo.getGeoId());
+-        locationMap.put("name",geo.getPOI_name());
+-        locationMap.put("x",geo.getCoordX()+"");
+-        locationMap.put("y",geo.getCoordY()+"");
+-
+-        firestore.collection("locations").add(locationMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+-            @Override
+-            public void onSuccess(DocumentReference documentReference) {
+-                Log.d("FIRESTORE","Sikeres mentés az adatbázisba ezzel az ID-vel: "+ documentReference.getId()+"\t Firestore: "+ documentReference.getFirestore());
+-            }
+-        }).addOnFailureListener(new OnFailureListener() {
+-            @Override
+-            public void onFailure(@NonNull Exception e) {
+-                Log.w("FIRESTORE", "Kritikus hiba:\t", e);
+-            }
+-        });
+-    }
+-
+-    /**
+-     * Search and read a specific location from <i style="color: red">Firestore</i>.
+-     * @author Matusz
+-     * @version v1
+-     * @param locationId Primary identifer for <i>comment</i>
+-     * @param callback Interface separeting the cloud function from the main thread.
+-     * @see GeoLocation
+-     */
+-    public void getLocationById(String locationId, Callback<GeoLocation> callback) {
+-        firestore.collection("locations")
+-                .whereEqualTo("id", locationId)
+-                .get()
+-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+-                    @Override
+-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+-                        if (task.isSuccessful()) {
+-                            if (!task.getResult().isEmpty()) {
+-                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+-                                Map<String, Object> locationData = document.getData();
+-
+-                                GeoLocation targetLocation = new GeoLocation();
+-                                targetLocation.setGeoId((String) locationData.get("geoId"));
+-                                targetLocation.setPOI_name((String) locationData.get("name"));
+-                                targetLocation.setCoordX(Double.parseDouble((String) locationData.get("x")));
+-                                targetLocation.setCoordY(Double.parseDouble((String) locationData.get("y")));
+-
+-                                callback.onAnswerReceived(targetLocation);
+-                            } else {
+-                                callback.onError(new Exception("Location not found"));
+-                            }
+-                        } else {
+-                            Log.w("FIRESTORE", "Error getting documents.", task.getException());
+-                            callback.onError(task.getException());
+-                        }
+-                    }
+-                });
+-    }
+-
+-
+-}
+Index: app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java b/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/util/database/DataConnect.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,263 +0,0 @@
+-package hu.matusz.travelapp.util.database;
+-
+-import android.util.Log;
+-
+-import androidx.annotation.NonNull;
+-
+-import com.google.firebase.database.DataSnapshot;
+-import com.google.firebase.database.DatabaseError;
+-import com.google.firebase.database.DatabaseReference;
+-import com.google.firebase.database.FirebaseDatabase;
+-import com.google.firebase.database.Query;
+-import com.google.firebase.database.ValueEventListener;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.Map;
+-
+-import hu.matusz.travelapp.util.database.models.Comment;
+-import hu.matusz.travelapp.util.database.models.GeoLocation;
+-import hu.matusz.travelapp.util.database.models.User;
+-
+-/**
+- * @deprecated Basically useless junk
+- * @author Matusz
+- * @version v6
+- *
+- */
+-public class DataConnect {
+-    private static final String TAG = "FirebaseDatabaseHelper";
+-    private final FirebaseDatabase database;
+-    private final DatabaseReference usersRef;
+-    private final DatabaseReference commentsRef;
+-    private final DatabaseReference locationsRef;
+-
+-    @Deprecated
+-    public interface DataStatus {
+-        void DataIsLoaded(Object obj);
+-        void DataIsInserted();
+-        void DataIsUpdated();
+-        void DataIsDeleted();
+-        void DataIsError(String errorMessage);
+-    }
+-    @Deprecated
+-    public DataConnect() {
+-        database = FirebaseDatabase.getInstance();
+-        usersRef = database.getReference("users");
+-        commentsRef = database.getReference("comments");
+-        locationsRef = database.getReference("locations");
+-    }
+-
+-    @Deprecated
+-    public void saveUser(User user, final DataStatus dataStatus) {
+-        Log.d("DEBUG_CHECK", "saveUser meghívva: " + user.getUserId());
+-        usersRef.child(user.getUserId()).setValue(user)
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "User saved successfully");
+-                    if (dataStatus != null) dataStatus.DataIsInserted();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error saving user", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-    @Deprecated
+-    public void getUser(String userId, final DataStatus dataStatus) {
+-        usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+-            @Override
+-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+-                if (dataSnapshot.exists()) {
+-                    User user = dataSnapshot.getValue(User.class);
+-                    if (dataStatus != null) dataStatus.DataIsLoaded(user);
+-                } else {
+-                    if (dataStatus != null) dataStatus.DataIsError("User not found");
+-                }
+-            }
+-
+-            @Override
+-            public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getUserById:onCancelled", databaseError.toException());
+-                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+-            }
+-        });
+-    }
+-    @Deprecated
+-    public void updateUser(String userId, Map<String, Object> updates, final DataStatus dataStatus) {
+-        usersRef.child(userId).updateChildren(updates)
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "User updated successfully");
+-                    if (dataStatus != null) dataStatus.DataIsUpdated();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error updating user", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-    @Deprecated
+-    public void deleteUser(String userId, final DataStatus dataStatus) {
+-        usersRef.child(userId).removeValue()
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "User deleted successfully");
+-                    if (dataStatus != null) dataStatus.DataIsDeleted();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error deleting user", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-
+-    @Deprecated
+-    public void saveLocation(GeoLocation location, final DataStatus dataStatus) {
+-        locationsRef.child(location.getGeoId()).setValue(location)
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "Location saved successfully");
+-                    if (dataStatus != null) dataStatus.DataIsInserted();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error saving location", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-    @Deprecated
+-    public void getLocation(String geoId, final DataStatus dataStatus) {
+-        locationsRef.child(geoId).addListenerForSingleValueEvent(new ValueEventListener() {
+-            @Override
+-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+-                if (dataSnapshot.exists()) {
+-                    GeoLocation location = dataSnapshot.getValue(GeoLocation.class);
+-                    if (dataStatus != null) dataStatus.DataIsLoaded(location);
+-                } else {
+-                    if (dataStatus != null) dataStatus.DataIsError("Location not found");
+-                }
+-            }
+-
+-            @Override
+-            public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getLocationById:onCancelled", databaseError.toException());
+-                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+-            }
+-        });
+-    }
+-    @Deprecated
+-    public void getLocationsNearby(double centerX, double centerY, double radius, final DataStatus dataStatus) {
+-        locationsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+-            @Override
+-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+-                List<GeoLocation> nearbyLocations = new ArrayList<>();
+-                for (DataSnapshot locationSnapshot : dataSnapshot.getChildren()) {
+-                    GeoLocation location = locationSnapshot.getValue(GeoLocation.class);
+-                    if (location != null) {
+-                        double distance = calculateDistance(centerX, centerY, location.getCoordX(), location.getCoordY());
+-                        if (distance <= radius) {
+-                            nearbyLocations.add(location);
+-                        }
+-                    }
+-                }
+-                if (dataStatus != null) dataStatus.DataIsLoaded(nearbyLocations);
+-            }
+-
+-            @Override
+-            public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getLocationsNearby:onCancelled", databaseError.toException());
+-                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+-            }
+-        });
+-    }
+-
+-    @Deprecated
+-    public void saveComment(Comment comment, final DataStatus dataStatus) {
+-        // A Firebase automatikusan generál egy egyedi ID-t
+-        String commentId = comment.getCommentId();
+-        if (commentId == null || commentId.isEmpty()) {
+-            commentId = commentsRef.push().getKey();
+-            comment.setCommentId(commentId);
+-        }
+-
+-        commentsRef.child(commentId).setValue(comment)
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "Comment saved successfully");
+-                    if (dataStatus != null) dataStatus.DataIsInserted();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error saving comment", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-    @Deprecated
+-    public void getCommentsByUser(String userId, final DataStatus dataStatus) {
+-        Query query = commentsRef.orderByChild("userId").equalTo(userId);
+-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+-            @Override
+-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+-                List<Comment> comments = new ArrayList<>();
+-                for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {
+-                    Comment comment = commentSnapshot.getValue(Comment.class);
+-                    if (comment != null) {
+-                        comments.add(comment);
+-                    }
+-                }
+-                if (dataStatus != null) dataStatus.DataIsLoaded(comments);
+-            }
+-
+-            @Override
+-            public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getCommentsByUser:onCancelled", databaseError.toException());
+-                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+-            }
+-        });
+-    }
+-    @Deprecated
+-    public void getCommentsByLocation(String geoId, final DataStatus dataStatus) {
+-        Query query = commentsRef.orderByChild("geoId").equalTo(geoId);
+-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+-            @Override
+-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+-                List<Comment> comments = new ArrayList<>();
+-                for (DataSnapshot commentSnapshot : dataSnapshot.getChildren()) {
+-                    Comment comment = commentSnapshot.getValue(Comment.class);
+-                    if (comment != null) {
+-                        comments.add(comment);
+-                    }
+-                }
+-                if (dataStatus != null) dataStatus.DataIsLoaded(comments);
+-            }
+-
+-            @Override
+-            public void onCancelled(@NonNull DatabaseError databaseError) {
+-                Log.e(TAG, "getCommentsByLocation:onCancelled", databaseError.toException());
+-                if (dataStatus != null) dataStatus.DataIsError(databaseError.getMessage());
+-            }
+-        });
+-    }
+-    @Deprecated
+-    public void updateComment(String commentId, Map<String, Object> updates, final DataStatus dataStatus) {
+-        commentsRef.child(commentId).updateChildren(updates)
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "Comment updated successfully");
+-                    if (dataStatus != null) dataStatus.DataIsUpdated();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error updating comment", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-    @Deprecated
+-    public void deleteComment(String commentId, final DataStatus dataStatus) {
+-        commentsRef.child(commentId).removeValue()
+-                .addOnSuccessListener(aVoid -> {
+-                    Log.d(TAG, "Comment deleted successfully");
+-                    if (dataStatus != null) dataStatus.DataIsDeleted();
+-                })
+-                .addOnFailureListener(e -> {
+-                    Log.e(TAG, "Error deleting comment", e);
+-                    if (dataStatus != null) dataStatus.DataIsError(e.getMessage());
+-                });
+-    }
+-
+-    @Deprecated
+-    private double calculateDistance(double x1, double y1, double x2, double y2) {
+-        // Euklideszi távolság számítása
+-        // Megjegyzés: Ha GPS koordinátákat használsz, akkor haversine képletet kellene használni
+-        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java b/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java
+deleted file mode 100644
+--- a/app/src/main/java/hu/matusz/travelapp/GoogleSignInActivity.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,268 +0,0 @@
+-package hu.matusz.travelapp;
+-
+-import static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;
+-
+-import android.content.Intent;
+-import android.os.Bundle;
+-import android.os.CancellationSignal;
+-import android.util.Log;
+-import android.widget.LinearLayout;
+-
+-import androidx.annotation.NonNull;
+-import androidx.appcompat.app.AppCompatActivity;
+-import androidx.credentials.ClearCredentialStateRequest;
+-import androidx.credentials.Credential;
+-import androidx.credentials.CredentialManager;
+-import androidx.credentials.CredentialManagerCallback;
+-import androidx.credentials.CustomCredential;
+-import androidx.credentials.GetCredentialRequest;
+-import androidx.credentials.GetCredentialResponse;
+-import androidx.credentials.exceptions.ClearCredentialException;
+-import androidx.credentials.exceptions.GetCredentialException;
+-import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
+-import com.google.firebase.auth.AuthCredential;
+-import com.google.firebase.auth.FirebaseAuth;
+-import com.google.firebase.auth.FirebaseUser;
+-import com.google.firebase.auth.GoogleAuthProvider;
+-
+-import java.io.Serializable;
+-import java.util.List;
+-import java.util.concurrent.Executors;
+-
+-import hu.matusz.travelapp.util.UUIDGen;
+-import hu.matusz.travelapp.util.animations.SimpleLoadingAnimation;
+-import hu.matusz.travelapp.util.database.Callback;
+-import hu.matusz.travelapp.util.database.FirestoreDataHandler;
+-import hu.matusz.travelapp.util.database.models.Comment;
+-import hu.matusz.travelapp.util.database.models.User;
+-
+-
+-public class GoogleSignInActivity extends AppCompatActivity {
+-    private FirestoreDataHandler fc;
+-    private UUIDGen u = new UUIDGen();
+-    public User localUser;
+-    private static final String GOOGLESIGNINLOGTAG = "GoogleLoginInformation";
+-
+-    private FirebaseAuth mAuth;
+-    private CredentialManager credentialManager;
+-    private SimpleLoadingAnimation sla;
+-    private  LinearLayout containerLayout;
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        setContentView(R.layout.login_activity);
+-
+-        // Inicializálás MINDIG kell
+-        mAuth = FirebaseAuth.getInstance();
+-        fc = new FirestoreDataHandler();
+-        fc.init();
+-        u = new UUIDGen();
+-        credentialManager = CredentialManager.create(getBaseContext());
+-        containerLayout = findViewById(R.id.containerLayout);
+-        sla = new SimpleLoadingAnimation(findViewById(R.id.loadingImage));
+-        sla.startVariableSpeedRotation();
+-
+-        FirebaseUser currentUser = mAuth.getCurrentUser();
+-
+-        if (currentUser != null) {
+-
+-            fetchUserAndContinue(currentUser);
+-        } else {
+-
+-            launchCredentialManager();
+-        }
+-    }
+-
+-    private void fetchUserAndContinue(FirebaseUser user) {
+-        fc = new FirestoreDataHandler();
+-        fc.init();
+-        u = new UUIDGen();
+-
+-        fc.getUserByEmail(user.getEmail(), new Callback<User>() {
+-            @Override
+-            public void onAnswerReceived(User result) {
+-                if (result != null) {
+-                    localUser = result;
+-                } else {
+-                    localUser = new User();
+-                    localUser.setUserId(u.getUUID());
+-                    localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : "");
+-                    localUser.setName(user.getDisplayName());
+-                    localUser.setCountryOfOriginCode("");
+-                    localUser.setEmail(user.getEmail());
+-                    fc.saveUser(localUser);
+-                }
+-
+-                updateUI(user);
+-            }
+-
+-            @Override
+-            public void onError(Exception e) {
+-                Log.e(GOOGLESIGNINLOGTAG, "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+-            }
+-        });
+-    }
+-
+-
+-
+-    @Override
+-    protected void onDestroy() {
+-        super.onDestroy();
+-        sla.destroy();
+-    }
+-
+-
+-    //+ Testing, no longer in use
+-    public void firestoreTest(){
+-        FirestoreDataHandler fc = new FirestoreDataHandler();
+-        UUIDGen u = new UUIDGen();
+-        String uu = u.getUUID();
+-        fc.init();
+-        //fc.saveUser(new User(uu, "Teszt Elek", "teszt@teszt.hu", "HU"));
+-        fc.getUserById(uu, new Callback<User>() {
+-            @Override
+-            public void onAnswerReceived(User user) {
+-                Log.d("FIRESTORE", user.toString());
+-            }
+-
+-            @Override
+-            public void onError(Exception e) {
+-                Log.e("FIRESTORE", "Hiba a felhasználó lekérdezésekor: " + e.getMessage());
+-            }
+-        });
+-        fc.saveComment(new Comment(uu, u.getUUID(), "Teszt", "This is a test comment", 6, u.getUUID()));
+-        fc.getAllComment(new Callback<List<Comment>>() {
+-            @Override
+-            public void onAnswerReceived(List<Comment> result) {
+-                for (int i = 0; i < result.size(); i++) {
+-                    Log.d("FIRECOMMENT", "Comment #"+(i+1)+" "+result.get(i).toString());
+-                }
+-            }
+-
+-            @Override
+-            public void onError(Exception e) {
+-                Log.d("FIRECOMMENT", e.toString());
+-            }
+-        });
+-    }
+-    @Override
+-    public void onStart() {
+-        super.onStart();
+-        FirebaseUser currentUser = mAuth.getCurrentUser();
+-        updateUI(currentUser);
+-    }
+-
+-    private void launchCredentialManager() {
+-        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
+-                .setFilterByAuthorizedAccounts(false)
+-                .setServerClientId(getString(R.string.default_web_client_id))
+-                .build();
+-
+-        GetCredentialRequest request = new GetCredentialRequest.Builder()
+-                .addCredentialOption(googleIdOption)
+-                .build();
+-        credentialManager.getCredentialAsync(
+-                getBaseContext(),
+-                request,
+-                new CancellationSignal(),
+-                Executors.newSingleThreadExecutor(),
+-                new CredentialManagerCallback<>() {
+-                    @Override
+-                    public void onResult(GetCredentialResponse result) {
+-                        handleSignIn(result.getCredential());
+-                    }
+-
+-                    @Override
+-                    public void onError(GetCredentialException e) {
+-                        Log.e(GOOGLESIGNINLOGTAG, "Couldn't retrieve user's credentials: " + e.getLocalizedMessage());
+-                        Log.e(GOOGLESIGNINLOGTAG, "Error Type: " + e.getClass().getSimpleName());
+-                        Log.e(GOOGLESIGNINLOGTAG, "Localized Message: " + e.getLocalizedMessage());
+-                        Log.e(GOOGLESIGNINLOGTAG, "Full Exception: ", e);
+-                    }
+-                }
+-        );
+-    }
+-
+-
+-    private void handleSignIn(Credential credential) {
+-
+-        if (credential instanceof CustomCredential customCredential
+-                && credential.getType().equals(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
+-            Bundle credentialData = customCredential.getData();
+-            GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credentialData);
+-
+-            firebaseAuthWithGoogle(googleIdTokenCredential.getIdToken());
+-        } else {
+-            Log.w(GOOGLESIGNINLOGTAG, "Credential is not of type Google ID!");
+-        }
+-    }
+-    private void firebaseAuthWithGoogle(String idToken) {
+-        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+-        mAuth.signInWithCredential(credential)
+-                .addOnCompleteListener(this, task -> {
+-                    if (task.isSuccessful()) {
+-
+-                        Log.d(GOOGLESIGNINLOGTAG, "signInWithCredential:success");
+-                        FirebaseUser user = mAuth.getCurrentUser();
+-                        fc.getUserByEmail(user.getEmail(), new Callback<User>() {
+-                            @Override
+-                            public void onAnswerReceived(User result) {
+-                                if (result != null && result.getEmail() != null && !result.getEmail().isEmpty()) {
+-                                    localUser = result;
+-                                }
+-
+-
+-                                Log.d("LOGINTEST", "firebaseAuthWithGoogle: (success ág)" + localUser.toString());
+-                                updateUI(user);
+-                            }
+-
+-                            @Override
+-                            public void onError(Exception e) {
+-                                localUser = new User();
+-                                localUser.setUserId(u.getUUID());
+-                                localUser.setPhotoURI(user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : "");
+-                                localUser.setName(user.getDisplayName());
+-                                localUser.setCountryOfOriginCode("");
+-                                localUser.setEmail(user.getEmail());
+-                                fc.saveUser(localUser);
+-                                Log.d("LOGINTEST", "firebaseAuthWithGoogle: (error ág)" + localUser.toString());
+-                            }
+-                        });
+-
+-                        updateUI(user);
+-                    } else {
+-                        Log.w(GOOGLESIGNINLOGTAG, "signInWithCredential:failure", task.getException());
+-                        updateUI(null);
+-                    }
+-                });
+-    }
+-    private void signOut() {
+-        mAuth.signOut();
+-
+-        ClearCredentialStateRequest clearRequest = new ClearCredentialStateRequest();
+-        credentialManager.clearCredentialStateAsync(
+-                clearRequest,
+-                new CancellationSignal(),
+-                Executors.newSingleThreadExecutor(),
+-                new CredentialManagerCallback<>() {
+-                    @Override
+-                    public void onResult(@NonNull Void result) {
+-                        updateUI(null);
+-                    }
+-
+-                    @Override
+-                    public void onError(@NonNull ClearCredentialException e) {
+-                        Log.e(GOOGLESIGNINLOGTAG, "Couldn't clear user credentials: " + e.getLocalizedMessage());
+-                    }
+-                });
+-    }
+-    private void updateUI(FirebaseUser user) {
+-        if(localUser!=null){
+-            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, UserActivity.class);
+-            loggedInIntent.putExtra("user", localUser);
+-            sla.destroy();
+-            startActivity(loggedInIntent);
+-        }
+-    }
+-}
+\ No newline at end of file
+Index: app/src/google-services.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/google-services.json b/app/src/google-services.json
+deleted file mode 100644
+--- a/app/src/google-services.json	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,47 +0,0 @@
+-{
+-  "project_info": {
+-    "project_number": "853429563864",
+-    "project_id": "travelapp2025erasmus",
+-    "storage_bucket": "travelapp2025erasmus.firebasestorage.app"
+-  },
+-  "client": [
+-    {
+-      "client_info": {
+-        "mobilesdk_app_id": "1:853429563864:android:f399944474392fcc2902ad",
+-        "android_client_info": {
+-          "package_name": "hu.matusz.travelapp"
+-        }
+-      },
+-      "oauth_client": [
+-        {
+-          "client_id": "853429563864-o4914hv47ifilvbmonif04obcq0ufpak.apps.googleusercontent.com",
+-          "client_type": 1,
+-          "android_info": {
+-            "package_name": "hu.matusz.travelapp",
+-            "certificate_hash": "b50342ef953f4e212905c0d89c5f34f433069f14"
+-          }
+-        },
+-        {
+-          "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+-          "client_type": 3
+-        }
+-      ],
+-      "api_key": [
+-        {
+-          "current_key": "AIzaSyA4JkI_5ih_F0wJmiE3m33Zo4CEwWnP5uM"
+-        }
+-      ],
+-      "services": {
+-        "appinvite_service": {
+-          "other_platform_oauth_client": [
+-            {
+-              "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+-              "client_type": 3
+-            }
+-          ]
+-        }
+-      }
+-    }
+-  ],
+-  "configuration_version": "1"
+-}
+\ No newline at end of file
+Index: app/google-services.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/google-services.json b/app/google-services.json
+deleted file mode 100644
+--- a/app/google-services.json	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,55 +0,0 @@
+-{
+-  "project_info": {
+-    "project_number": "853429563864",
+-    "firebase_url": "https://travelapp2025erasmus-default-rtdb.europe-west1.firebasedatabase.app",
+-    "project_id": "travelapp2025erasmus",
+-    "storage_bucket": "travelapp2025erasmus.firebasestorage.app"
+-  },
+-  "client": [
+-    {
+-      "client_info": {
+-        "mobilesdk_app_id": "1:853429563864:android:f399944474392fcc2902ad",
+-        "android_client_info": {
+-          "package_name": "hu.matusz.travelapp"
+-        }
+-      },
+-      "oauth_client": [
+-        {
+-          "client_id": "853429563864-o4914hv47ifilvbmonif04obcq0ufpak.apps.googleusercontent.com",
+-          "client_type": 1,
+-          "android_info": {
+-            "package_name": "hu.matusz.travelapp",
+-            "certificate_hash": "b50342ef953f4e212905c0d89c5f34f433069f14"
+-          }
+-        },
+-        {
+-          "client_id": "853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com",
+-          "client_type": 3
+-        }
+-      ],
+-      "api_key": [
+-        {
+-          "current_key": "AIzaSyA4JkI_5ih_F0wJmiE3m33Zo4CEwWnP5uM"
+-        }
+-      ],
+-      "services": {
+-        "appinvite_service": {
+-          "other_platform_oauth_client": [
+-            {
+-              "client_id": "853429563864-lqr75se268n3nr3e8a5av1rqkbgn3aae.apps.googleusercontent.com",
+-              "client_type": 3
+-            },
+-            {
+-              "client_id": "853429563864-9f18nmplalia3dd1kq8kfn13p4ek2m8i.apps.googleusercontent.com",
+-              "client_type": 2,
+-              "ios_info": {
+-                "bundle_id": "hu.matusz.TravelAppios"
+-              }
+-            }
+-          ]
+-        }
+-      }
+-    }
+-  ],
+-  "configuration_version": "1"
+-}
+\ No newline at end of file
+Index: app/src/main/res/values/ids.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/ids.xml b/app/src/main/res/values/ids.xml
+deleted file mode 100644
+--- a/app/src/main/res/values/ids.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ /dev/null	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
+@@ -1,5 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<resources>
+-    <item name="containerLayout" type="id" />
+-    <item name="addButton" type="id" />
+-</resources>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"VcsDirectoryMappings\">\n    <mapping directory=\"$PROJECT_DIR$\" vcs=\"Git\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+--- a/.idea/vcs.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/.idea/vcs.xml	(date 1748949915627)
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="VcsDirectoryMappings">
+-    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++    <mapping directory="" vcs="Git" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\n    <string name=\"app_name\">TravelApp</string>\n    <string name=\"default_web_client_id\">853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com</string>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+--- a/app/src/main/res/values/strings.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values/strings.xml	(date 1748949920879)
+@@ -1,4 +1,3 @@
+ <resources>
+     <string name="app_name">TravelApp</string>
+-    <string name="default_web_client_id">853429563864-n9inqk52j7nevu4q5ao6aqa10vdss7d4.apps.googleusercontent.com</string>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/values/themes.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources xmlns:tools=\"http://schemas.android.com/tools\">\n    <!-- Base application theme. -->\n    <style name=\"Base.Theme.TravelApp\" parent=\"Theme.Material3.DayNight.NoActionBar\">\n        <!-- Customize your light theme here. -->\n        <item name=\"colorPrimary\">@color/colorPrimary</item>\n        <item name=\"colorPrimaryVariant\">@color/colorPrimaryVariant</item>\n        <item name=\"colorOnPrimary\">@color/colorOnPrimary</item>\n        <!-- <item name=\"colorPrimary\">@color/my_light_primary</item> -->\n    </style>\n\n    <style name=\"Theme.TravelApp\" parent=\"Base.Theme.TravelApp\" />\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/themes.xml b/app/src/main/res/values/themes.xml
+--- a/app/src/main/res/values/themes.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values/themes.xml	(date 1748949920879)
+@@ -1,12 +1,0 @@
+-<resources xmlns:tools="http://schemas.android.com/tools">
+-    <!-- Base application theme. -->
+-    <style name="Base.Theme.TravelApp" parent="Theme.Material3.DayNight.NoActionBar">
+-        <!-- Customize your light theme here. -->
+-        <item name="colorPrimary">@color/colorPrimary</item>
+-        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+-        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+-    </style>
+-
+-    <style name="Theme.TravelApp" parent="Base.Theme.TravelApp" />
+-</resources>
+\ No newline at end of file
+Index: app/src/main/res/values/colors.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"black\">#FF000000</color>\n    <color name=\"white\">#FFFFFFFF</color>\n    <color name=\"background_red\">#C03F4A</color>\n    <color name=\"colorPrimary\">#C03F4A</color>\n    <color name=\"colorPrimaryVariant\">#8A2B34</color>\n    <color name=\"colorOnPrimary\">#FFFFFF</color>\n\n    <color name=\"colorBackground\">#FFFFFF</color>\n    <color name=\"colorOnBackground\">#000000</color>\n\n    <color name=\"colorSurface\">#F5F5F5</color>\n    <color name=\"colorOnSurface\">#000000</color>\n\n    <color name=\"colorSecondary\">#FFB4A9</color>\n    <color name=\"colorOnSecondary\">#000000</color>\n\n    <color name=\"colorPrimaryD\">#C03F4A</color>\n    <color name=\"colorPrimaryVariantD\">#FF6B70</color>\n    <color name=\"colorOnPrimaryD\">#FFFFFF</color>\n\n    <color name=\"colorBackgroundD\">#121212</color>\n    <color name=\"colorOnBackgroundD\">#FFFFFF</color>\n\n    <color name=\"colorSurfaceD\">#1E1E1E</color>\n    <color name=\"colorOnSurfaceD\">#FFFFFF</color>\n\n    <color name=\"colorSecondaryD\">#FF8A80</color>\n    <color name=\"colorOnSecondaryD\">#000000</color>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/colors.xml b/app/src/main/res/values/colors.xml
+--- a/app/src/main/res/values/colors.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values/colors.xml	(date 1748949919716)
+@@ -2,30 +2,4 @@
+ <resources>
+     <color name="black">#FF000000</color>
+     <color name="white">#FFFFFFFF</color>
+-    <color name="background_red">#C03F4A</color>
+-    <color name="colorPrimary">#C03F4A</color>
+-    <color name="colorPrimaryVariant">#8A2B34</color>
+-    <color name="colorOnPrimary">#FFFFFF</color>
+-
+-    <color name="colorBackground">#FFFFFF</color>
+-    <color name="colorOnBackground">#000000</color>
+-
+-    <color name="colorSurface">#F5F5F5</color>
+-    <color name="colorOnSurface">#000000</color>
+-
+-    <color name="colorSecondary">#FFB4A9</color>
+-    <color name="colorOnSecondary">#000000</color>
+-
+-    <color name="colorPrimaryD">#C03F4A</color>
+-    <color name="colorPrimaryVariantD">#FF6B70</color>
+-    <color name="colorOnPrimaryD">#FFFFFF</color>
+-
+-    <color name="colorBackgroundD">#121212</color>
+-    <color name="colorOnBackgroundD">#FFFFFF</color>
+-
+-    <color name="colorSurfaceD">#1E1E1E</color>
+-    <color name="colorOnSurfaceD">#FFFFFF</color>
+-
+-    <color name="colorSecondaryD">#FF8A80</color>
+-    <color name="colorOnSecondaryD">#000000</color>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/values-night/themes.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources xmlns:tools=\"http://schemas.android.com/tools\">\n    <!-- Base application theme. -->\n    <style name=\"Base.Theme.TravelApp\" parent=\"Theme.Material3.DayNight.NoActionBar\">\n        <!-- Customize your dark theme here. -->\n        <item name=\"colorPrimary\">@color/colorPrimaryD</item>\n        <item name=\"colorPrimaryVariant\">@color/colorPrimaryVariantD</item>\n        <item name=\"colorOnPrimary\">@color/colorOnPrimaryD</item>\n        <!-- <item name=\"colorPrimary\">@color/my_dark_primary</item> -->\n    </style>\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values-night/themes.xml b/app/src/main/res/values-night/themes.xml
+--- a/app/src/main/res/values-night/themes.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/values-night/themes.xml	(date 1748949918603)
+@@ -2,9 +2,6 @@
+     <!-- Base application theme. -->
+     <style name="Base.Theme.TravelApp" parent="Theme.Material3.DayNight.NoActionBar">
+         <!-- Customize your dark theme here. -->
+-        <item name="colorPrimary">@color/colorPrimaryD</item>
+-        <item name="colorPrimaryVariant">@color/colorPrimaryVariantD</item>
+-        <item name="colorOnPrimary">@color/colorOnPrimaryD</item>
+         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+     </style>
+ </resources>
+\ No newline at end of file
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\n\n    id(\"com.android.application\")\n    id(\"com.google.gms.google-services\")\n}\n\nandroid {\n    namespace = \"hu.matusz.travelapp\"\n    compileSdk = 35\n\n    defaultConfig {\n        applicationId = \"hu.matusz.travelapp\"\n        minSdk = 28\n        targetSdk = 35\n        versionCode = 1\n        versionName = \"1.0\"\n\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\n    }\n\n    buildTypes {\n        release {\n            isMinifyEnabled = false\n            proguardFiles(\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\n                \"proguard-rules.pro\"\n            )\n        }\n    }\n    compileOptions {\n        sourceCompatibility = JavaVersion.VERSION_11\n        targetCompatibility = JavaVersion.VERSION_11\n    }\n}\n\ndependencies {\n    //Open Stree map libary\n    implementation (libs.osmdroid.android)\n    implementation (libs.osmbonuspack)\n\n\n\n    implementation(\"com.github.bumptech.glide:glide:4.16.0\")\n    annotationProcessor(\"com.github.bumptech.glide:compiler:4.16.0\")\n    implementation(\"androidx.credentials:credentials-play-services-auth:1.2.0\")\n    implementation(\"com.google.firebase:firebase-database:20.3.0\")\n    implementation(\"com.google.firebase:firebase-auth:22.3.0\")\n    implementation(platform(\"com.google.firebase:firebase-bom:33.13.0\"))\n    implementation(\"com.google.firebase:firebase-firestore\")\n    implementation(\"com.google.firebase:firebase-database\")\n    implementation(\"com.google.firebase:firebase-analytics\")\n    implementation(\"androidx.credentials:credentials:1.2.0-alpha03\")\n    implementation(\"com.google.android.libraries.identity.googleid:googleid:1.0.0-beta02\")\n    implementation(libs.appcompat)\n    implementation(libs.material)\n    implementation(libs.activity)\n    implementation(libs.constraintlayout)\n    implementation(libs.firebase.auth)\n    implementation(libs.credentials)\n    implementation(libs.credentials.play.services.auth)\n    implementation(libs.googleid)\n    implementation(libs.firebase.database)\n    implementation(libs.firebase.firestore)\n    implementation(libs.preference)\n    testImplementation(libs.junit)\n    androidTestImplementation(libs.ext.junit)\n    androidTestImplementation(libs.espresso.core)\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/build.gradle.kts	(date 1748949915627)
+@@ -1,7 +1,5 @@
+-plugins {
+-
+-    id("com.android.application")
+-    id("com.google.gms.google-services")
++    plugins {
++    alias(libs.plugins.android.application)
+ }
+ 
+ android {
+@@ -40,27 +38,10 @@
+ 
+ 
+ 
+-    implementation("com.github.bumptech.glide:glide:4.16.0")
+-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+-    implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
+-    implementation("com.google.firebase:firebase-database:20.3.0")
+-    implementation("com.google.firebase:firebase-auth:22.3.0")
+-    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+-    implementation("com.google.firebase:firebase-firestore")
+-    implementation("com.google.firebase:firebase-database")
+-    implementation("com.google.firebase:firebase-analytics")
+-    implementation("androidx.credentials:credentials:1.2.0-alpha03")
+-    implementation("com.google.android.libraries.identity.googleid:googleid:1.0.0-beta02")
+     implementation(libs.appcompat)
+     implementation(libs.material)
+     implementation(libs.activity)
+     implementation(libs.constraintlayout)
+-    implementation(libs.firebase.auth)
+-    implementation(libs.credentials)
+-    implementation(libs.credentials.play.services.auth)
+-    implementation(libs.googleid)
+-    implementation(libs.firebase.database)
+-    implementation(libs.firebase.firestore)
+     implementation(libs.preference)
+     testImplementation(libs.junit)
+     androidTestImplementation(libs.ext.junit)
