@@ -2,6 +2,9 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.TravelApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 

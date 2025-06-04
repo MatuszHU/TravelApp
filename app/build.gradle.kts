@@ -1,8 +1,7 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.google.gms.google.services)
-    //id("com.android.application")
-    //id("com.google.gms.google-services")
+
+    id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -29,15 +28,29 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
-    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+    //Open Stree map libary
+    implementation (libs.osmdroid.android)
+    implementation (libs.osmbonuspack)
+
+
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
+    implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation("com.google.firebase:firebase-auth:22.3.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-analytics")
+    implementation("androidx.credentials:credentials:1.2.0-alpha03")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.0.0-beta02")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -46,6 +59,9 @@ dependencies {
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.firestore)
+    implementation(libs.preference)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

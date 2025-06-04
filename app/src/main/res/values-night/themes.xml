@@ -2,6 +2,9 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.TravelApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryD</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariantD</item>
+        <item name="colorOnPrimary">@color/colorOnPrimaryD</item>
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
     </style>
 </resources>

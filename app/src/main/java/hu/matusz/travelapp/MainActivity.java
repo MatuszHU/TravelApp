@@ -1,57 +1,182 @@
 package hu.matusz.travelapp;
 
-import static com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL;
+import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.Marker;
 
-import android.content.Intent;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.android.gms.common.SignInButton;
-import hu.matusz.travelapp.sqlutil.SQLSelect;
 
+import java.io.File;
+
+import hu.matusz.travelapp.classes.CustomMarker;
+import hu.matusz.travelapp.utils.InfoPanelAnimator;
 
 public class MainActivity extends AppCompatActivity {
-    private SignInButton signInButton;
+    private static final String TAG = "MainActivity";
+
+    private MapView map;
+    private LinearLayout infoPanel;
+    private TextView pinTitle;
+    private ImageButton closePanelButton;
+    private Button deletePinButton;
+    private Marker selectedMarker = null;
+
+    // only for development
+    private int markerCounter = 0;
+
+    /**
+     * Creates a osm map
+     * @param savedInstanceState If the activity is being re-initialized after
+     *     previously being shut down then this Bundle contains the data it most
+     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     *
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+
+        Context ctx = getApplicationContext();
+
+        // Setup internal tile cache (no permissions needed)
+        File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
+        Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);
+        Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, "tiles"));
+
+        // Load preferences using AndroidX
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
+        Configuration.getInstance().load(ctx, prefs);
+
+        // Set layout
+        setContentView(R.layout.activity_map);
+
+        // Initialize the MapView
+        map = findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setTilesScaledToDpi(true);
+        map.setBuiltInZoomControls(true);
+        map.setMultiTouchControls(true);
+
+        // Initialize views
+        infoPanel = findViewById(R.id.info_panel);
+        pinTitle = findViewById(R.id.pin_title);
+        closePanelButton = findViewById(R.id.close_panel_button);
+        deletePinButton = findViewById(R.id.delete_pin_button);
+
+        // closes infoPanel
+        closePanelButton.setOnClickListener(v -> {
+            closeInfoPanel();
+            selectedMarker = null;
         });
-        signInButton = findViewById(R.id.sign_in_button);
 
-        signInButton.setSize(SignInButton.SIZE_WIDE);
+        // configure delete button
+        deletePinButton.setOnClickListener(v -> {
+            if (selectedMarker != null) {
 
-        signInButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, GoogleSignInActivity.class);
-            startActivity(intent);
+                // Alerts before deleting
+                new AlertDialog.Builder(map.getContext())
+                        .setTitle("Remove pin")
+                        .setMessage("Do you want to remove the pin \"" + selectedMarker.getTitle() + "\" ?")
+                        .setPositiveButton("Remove", (dialog, which) -> {
+                            map.getOverlays().remove(selectedMarker);
+                            closeInfoPanel();
+                            selectedMarker = null;
+                            map.invalidate();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
         });
 
-        //SQLSelect statement = new SQLSelect();
-        // Note: Using backticks (`) is not necessary, but highly recommended by the developers.
-        //ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
-        //Log.d("SQLLog", dataSet.toString());
+        // Add event listener to detect map taps
+        map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
+            @Override
+            public boolean singleTapConfirmedHelper(GeoPoint p) {
+                // Add marker at tapped location
+                addMarkerAt(p);
+                return true;
+            }
 
+            @Override
+            public boolean longPressHelper(GeoPoint p) {
+                return false;
+            }
+        }));
 
+        // Center map on given location
+        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
+        IMapController mapController = map.getController();
+        mapController.setZoom(19);
+        mapController.setCenter(startPoint);
+
+        // Add marker
+        Marker startMarker = new Marker(map);
+        startMarker.setPosition(startPoint);
+        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        startMarker.setTitle("Get doxed lol");
+        map.getOverlays().add(startMarker);
+
+        // refresh view
+        map.invalidate();
     }
 
-    public void signOut() {
-        FirebaseAuth.getInstance().signOut();
+    /**
+     * Adds a marker at a given point
+     * @param point Location where marker should be added
+     */
+    private void addMarkerAt(GeoPoint point) {
+        CustomMarker marker = new CustomMarker(map, point);
+        marker.setTitle("New Pin " + markerCounter);
+        selectedMarker = marker;
+        markerCounter++;
+
+        // defines behavior of pins when clicked
+        marker.setOnMarkerClickListener((m, mapView) -> {
+            if(m.equals((selectedMarker)))
+                return true;
+
+            selectedMarker = m;
+            openInfoPanel(m);
+
+            return true;
+        });
+
+        map.getOverlays().add(marker);
+        openInfoPanel(marker);
+        map.invalidate();
     }
 
-    private void updateUI(@Nullable FirebaseUser user) {
-
+    /**
+     * Opens the info panel to the given marker
+     * @param marker The marker to which the info panel should be shown
+     */
+    private void openInfoPanel(Marker marker) {
+        pinTitle.setText(marker.getTitle());
+        if (!(infoPanel.getVisibility() == View.VISIBLE))
+            InfoPanelAnimator.showPanel(infoPanel);
     }
+
+    /**
+     * Closes info panel
+     */
+    private void closeInfoPanel() {
+        InfoPanelAnimator.hidePanel(infoPanel);
+    }
+
 }
