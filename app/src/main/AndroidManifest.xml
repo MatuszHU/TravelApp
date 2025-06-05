@@ -27,7 +27,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".GoogleSignInActivity" />
+        <activity android:name=".MapActivity"
+            android:exported="true">
 
+        </activity>
     </application>
 
 </manifest>

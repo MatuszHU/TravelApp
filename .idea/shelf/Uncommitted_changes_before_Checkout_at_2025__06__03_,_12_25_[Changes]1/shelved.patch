@@ -1,0 +1,191 @@
+Index: app/src/main/res/layout/activity_map.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<androidx.constraintlayout.widget.ConstraintLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\">\n\n    <!-- Map view -->\n    <org.osmdroid.views.MapView\n        android:id=\"@+id/map\"\n        android:layout_width=\"0dp\"\n        android:layout_height=\"0dp\"\n        app:layout_constraintTop_toTopOf=\"parent\"\n        app:layout_constraintBottom_toBottomOf=\"parent\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\" />\n\n    <!-- InfoPanel -->\n    <LinearLayout\n        android:id=\"@+id/info_panel\"\n        android:layout_width=\"0dp\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\"\n        android:background=\"@android:color/white\"\n        android:padding=\"16dp\"\n        android:visibility=\"gone\"\n        android:elevation=\"8dp\"\n        app:layout_constraintStart_toStartOf=\"parent\"\n        app:layout_constraintEnd_toEndOf=\"parent\"\n        app:layout_constraintBottom_toBottomOf=\"parent\">\n\n        <!-- title + close button -->\n        <LinearLayout\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center_vertical\">\n\n            <TextView\n                android:id=\"@+id/pin_title\"\n                android:layout_width=\"0dp\"\n                android:layout_height=\"wrap_content\"\n                android:layout_weight=\"1\"\n                android:hint=\"Pin Name\"\n                android:textSize=\"18sp\"\n                android:textStyle=\"bold\" />\n\n            <ImageButton\n                android:id=\"@+id/close_panel_button\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:background=\"?attr/selectableItemBackgroundBorderless\"\n                android:src=\"@android:drawable/ic_menu_close_clear_cancel\"\n                android:contentDescription=\"Close\"\n                app:tint=\"@android:color/black\" />\n        </LinearLayout>\n\n        <!-- Delete-Button -->\n        <Button\n            android:id=\"@+id/delete_pin_button\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:text=\"Delete Pin\"\n            android:layout_marginTop=\"12dp\"/>\n    </LinearLayout>\n\n</androidx.constraintlayout.widget.ConstraintLayout>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_map.xml b/app/src/main/res/layout/activity_map.xml
+--- a/app/src/main/res/layout/activity_map.xml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/res/layout/activity_map.xml	(date 1746637871617)
+@@ -53,6 +53,7 @@
+                 android:src="@android:drawable/ic_menu_close_clear_cancel"
+                 android:contentDescription="Close"
+                 app:tint="@android:color/black" />
++
+         </LinearLayout>
+ 
+         <!-- Delete-Button -->
+@@ -62,6 +63,13 @@
+             android:layout_height="wrap_content"
+             android:text="Delete Pin"
+             android:layout_marginTop="12dp"/>
++        <!--Save Button-->
++        <Button
++            android:id="@+id/save_pin_button"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_weight="1"
++            android:text="Save Pin" />
+     </LinearLayout>
+ 
+ </androidx.constraintlayout.widget.ConstraintLayout>
+Index: app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java b/app/src/main/java/hu/matusz/travelapp/util/animations/InfoPanelAnimator.java
+rename from app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java
+rename to app/src/main/java/hu/matusz/travelapp/util/animations/InfoPanelAnimator.java
+--- a/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/app/src/main/java/hu/matusz/travelapp/util/animations/InfoPanelAnimator.java	(date 1746632692521)
+@@ -1,4 +1,4 @@
+-package hu.matusz.travelapp.utils;
++package hu.matusz.travelapp.util.animations;
+ 
+ import android.view.View;
+ import android.view.animation.TranslateAnimation;
+Index: app/src/main/res/layout/activity_starting_screen.xml
+===================================================================
+diff --git a/app/src/main/res/layout/activity_starting_screen.xml b/app/src/main/res/layout/activity_starting_screen.xml
+new file mode 100644
+--- /dev/null	(date 1746635844989)
++++ b/app/src/main/res/layout/activity_starting_screen.xml	(date 1746635844989)
+@@ -0,0 +1,59 @@
++<?xml version="1.0" encoding="utf-8"?>
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:id="@+id/main"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:padding="24dp"
++    android:background="#F9F9F9">
++
++    <View
++        android:id="@+id/backgroundTint"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"
++        android:background="@color/background_red"
++        android:alpha="0.07" />
++
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="vertical"
++        android:gravity="center"
++        android:layout_gravity="center">
++
++        <ImageView
++            android:id="@+id/logoImage"
++            android:layout_width="220dp"
++            android:layout_height="220dp"
++            android:src="@drawable/ipsantarem"
++            android:contentDescription="Logo"
++            android:layout_marginTop="96dp"/>
++
++        <TextView
++            android:id="@+id/welcomeText"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="Welcome"
++            android:textSize="40sp"
++            android:textColor="#1C1C1E"
++            android:textStyle="bold"
++            android:layout_marginTop="48dp" />
++
++        <TextView
++            android:id="@+id/subText"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="Please sign in to continue"
++            android:textSize="18sp"
++            android:textColor="#6C6C70"
++            android:layout_marginTop="16dp" />
++
++        <!-- Google Sign-In Button -->
++        <com.google.android.gms.common.SignInButton
++            android:id="@+id/btnGoogleSignIn"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="64dp" />
++
++    </LinearLayout>
++
++</FrameLayout>
+\ No newline at end of file
+Index: gradle/libs.versions.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>[versions]\nagp = \"8.9.1\"\njunit = \"4.13.2\"\njunitVersion = \"1.2.1\"\nespressoCore = \"3.6.1\"\nappcompat = \"1.7.0\"\nmaterial = \"1.12.0\"\nactivity = \"1.10.1\"\nconstraintlayout = \"2.2.1\"\nosmbonuspack = \"6.9.0\"\nosmdroidAndroid = \"6.1.16\"\npreference = \"1.2.1\"\ngoogleGmsGoogleServices = \"4.4.2\"\nfirebaseAuth = \"23.2.0\"\ncredentials = \"1.5.0\"\ncredentialsPlayServicesAuth = \"1.5.0\"\ngoogleid = \"1.1.1\"\nfirebaseDatabase = \"21.0.0\"\nfirebaseFirestore = \"25.1.4\"\n\n[libraries]\njunit = { group = \"junit\", name = \"junit\", version.ref = \"junit\" }\next-junit = { group = \"androidx.test.ext\", name = \"junit\", version.ref = \"junitVersion\" }\nespresso-core = { group = \"androidx.test.espresso\", name = \"espresso-core\", version.ref = \"espressoCore\" }\nappcompat = { group = \"androidx.appcompat\", name = \"appcompat\", version.ref = \"appcompat\" }\nmaterial = { group = \"com.google.android.material\", name = \"material\", version.ref = \"material\" }\nactivity = { group = \"androidx.activity\", name = \"activity\", version.ref = \"activity\" }\nconstraintlayout = { group = \"androidx.constraintlayout\", name = \"constraintlayout\", version.ref = \"constraintlayout\" }\nosmbonuspack = { module = \"com.github.MKergall:osmbonuspack\", version.ref = \"osmbonuspack\" }\nosmdroid-android = { module = \"org.osmdroid:osmdroid-android\", version.ref = \"osmdroidAndroid\" }\npreference = { group = \"androidx.preference\", name = \"preference\", version.ref = \"preference\" }\nfirebase-auth = { group = \"com.google.firebase\", name = \"firebase-auth\", version.ref = \"firebaseAuth\" }\ncredentials = { group = \"androidx.credentials\", name = \"credentials\", version.ref = \"credentials\" }\ncredentials-play-services-auth = { group = \"androidx.credentials\", name = \"credentials-play-services-auth\", version.ref = \"credentialsPlayServicesAuth\" }\ngoogleid = { group = \"com.google.android.libraries.identity.googleid\", name = \"googleid\", version.ref = \"googleid\" }\nfirebase-database = { group = \"com.google.firebase\", name = \"firebase-database\", version.ref = \"firebaseDatabase\" }\nfirebase-firestore = { group = \"com.google.firebase\", name = \"firebase-firestore\", version.ref = \"firebaseFirestore\" }\n\n[plugins]\nandroid-application = { id = \"com.android.application\", version.ref = \"agp\" }\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+--- a/gradle/libs.versions.toml	(revision 4553ed0d44579af6ca12c6e791540c309584c549)
++++ b/gradle/libs.versions.toml	(date 1746716035344)
+@@ -1,5 +1,5 @@
+ [versions]
+-agp = "8.9.1"
++agp = "8.10.0"
+ junit = "4.13.2"
+ junitVersion = "1.2.1"
+ espressoCore = "3.6.1"
+Index: app/src/main/java/hu/matusz/travelapp/StartingScreen.java
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/StartingScreen.java b/app/src/main/java/hu/matusz/travelapp/StartingScreen.java
+new file mode 100644
+--- /dev/null	(date 1746636829876)
++++ b/app/src/main/java/hu/matusz/travelapp/StartingScreen.java	(date 1746636829876)
+@@ -0,0 +1,54 @@
++package hu.matusz.travelapp;
++
++import android.content.Intent;
++import android.os.Bundle;
++import android.widget.Button;
++
++import androidx.activity.EdgeToEdge;
++import androidx.appcompat.app.AppCompatActivity;
++import androidx.core.graphics.Insets;
++import androidx.core.view.ViewCompat;
++import androidx.core.view.WindowInsetsCompat;
++
++import com.google.android.gms.common.SignInButton;
++import com.google.firebase.Firebase;
++import com.google.firebase.FirebaseApp;
++import com.google.firebase.auth.FirebaseAuth;
++import com.google.firebase.auth.FirebaseUser;
++import com.google.firebase.database.FirebaseDatabase;
++
++public class StartingScreen extends AppCompatActivity {
++    private SignInButton signInButton;
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        EdgeToEdge.enable(this);
++        FirebaseApp.initializeApp(this);
++        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
++        setContentView(R.layout.activity_starting_screen);
++        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
++            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
++            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
++            return insets;
++        });
++        signInButton = findViewById(R.id.btnGoogleSignIn);
++
++        signInButton.setSize(SignInButton.SIZE_ICON_ONLY);
++
++        signInButton.setOnClickListener(v -> {
++            Intent intent = new Intent(StartingScreen.this, GoogleSignInActivity.class);
++            startActivity(intent);
++        });
++
++    }
++
++
++    public void signOut() {
++
++        FirebaseAuth.getInstance().signOut();
++    }
++
++    private void updateUI(FirebaseUser user) {
++
++    }
++}
+\ No newline at end of file

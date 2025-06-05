@@ -45,6 +45,18 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <!-- Edit Button -->
+            <ImageButton
+                android:id="@+id/edit_pin_title_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_edit"
+                android:contentDescription="Edit Title"
+                app:tint="@android:color/black"
+                android:padding="4dp"/>
+
+            <!-- Close Button -->
             <ImageButton
                 android:id="@+id/close_panel_button"
                 android:layout_width="wrap_content"
@@ -54,6 +66,13 @@
                 android:contentDescription="Close"
                 app:tint="@android:color/black" />
         </LinearLayout>
+
+        <!-- Save-Button -->
+        <Button
+            android:id="@+id/save_pin_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Pin" />
 
         <!-- Delete-Button -->
         <Button

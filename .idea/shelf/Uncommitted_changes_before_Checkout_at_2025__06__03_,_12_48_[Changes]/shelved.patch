@@ -1,0 +1,246 @@
+Index: app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.matusz.travelapp.classes;\n\nimport android.graphics.drawable.Drawable;\n\nimport androidx.core.content.ContextCompat;\n\nimport org.osmdroid.util.GeoPoint;\nimport org.osmdroid.views.MapView;\nimport org.osmdroid.views.overlay.Marker;\n\nimport hu.matusz.travelapp.MainActivity;\nimport hu.matusz.travelapp.R;\n\n/**\n * Custom marker\n */\npublic class CustomMarker extends Marker {\n\n    /**\n     * Constructor\n     * @param mapView view on which marker is\n     * @param point location where marker should be added\n     */\n    public CustomMarker(MapView mapView, GeoPoint point) {\n        super(mapView);\n        setPosition(point);\n\n        // Sets marker icon\n        Drawable customIcon = ContextCompat.getDrawable(mapView.getContext(), R.drawable.drawing_pin);\n        if (customIcon != null) {\n            customIcon.setBounds(0 ,0, customIcon.getIntrinsicWidth() / 10, customIcon.getIntrinsicHeight() / 10);\n            setIcon(customIcon);\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java b/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java
+--- a/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java	(revision 42af1438673d7d6112e02138c49f4acd1bbaede7)
++++ b/app/src/main/java/hu/matusz/travelapp/classes/CustomMarker.java	(date 1748950985268)
+@@ -8,7 +8,6 @@
+ import org.osmdroid.views.MapView;
+ import org.osmdroid.views.overlay.Marker;
+ 
+-import hu.matusz.travelapp.MainActivity;
+ import hu.matusz.travelapp.R;
+ 
+ /**
+Index: app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java b/app/src/main/java/hu/matusz/travelapp/util/InfoPanelAnimator.java
+rename from app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java
+rename to app/src/main/java/hu/matusz/travelapp/util/InfoPanelAnimator.java
+--- a/app/src/main/java/hu/matusz/travelapp/utils/InfoPanelAnimator.java	(revision 42af1438673d7d6112e02138c49f4acd1bbaede7)
++++ b/app/src/main/java/hu/matusz/travelapp/util/InfoPanelAnimator.java	(date 1748951087318)
+@@ -1,4 +1,4 @@
+-package hu.matusz.travelapp.utils;
++package hu.matusz.travelapp.util;
+ 
+ import android.view.View;
+ import android.view.animation.TranslateAnimation;
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    xmlns:tools=\"http://schemas.android.com/tools\">\n\n    <uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n    <application\n        android:allowBackup=\"true\"\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\n        android:fullBackupContent=\"@xml/backup_rules\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:label=\"@string/app_name\"\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\n        android:supportsRtl=\"true\"\n        android:theme=\"@style/Theme.TravelApp\"\n        tools:targetApi=\"31\">\n        <activity\n            android:name=\".UserActivity\"\n            android:exported=\"false\" />\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n        <activity android:name=\".GoogleSignInActivity\" />\n\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 42af1438673d7d6112e02138c49f4acd1bbaede7)
++++ b/app/src/main/AndroidManifest.xml	(date 1748951000016)
+@@ -20,7 +20,7 @@
+             android:name=".UserActivity"
+             android:exported="false" />
+         <activity
+-            android:name=".MainActivity"
++            android:name=".MapView"
+             android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+Index: app/src/main/java/hu/matusz/travelapp/MapView.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/hu/matusz/travelapp/MapView.java b/app/src/main/java/hu/matusz/travelapp/MapView.java
+new file mode 100644
+--- /dev/null	(date 1748951257475)
++++ b/app/src/main/java/hu/matusz/travelapp/MapView.java	(date 1748951257475)
+@@ -0,0 +1,182 @@
++package hu.matusz.travelapp;
++
++import org.osmdroid.api.IMapController;
++import org.osmdroid.config.Configuration;
++import org.osmdroid.events.MapEventsReceiver;
++import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
++import org.osmdroid.util.GeoPoint;
++import org.osmdroid.views.MapView;
++import org.osmdroid.views.overlay.MapEventsOverlay;
++import org.osmdroid.views.overlay.Marker;
++
++import android.content.Context;
++import android.content.SharedPreferences;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.View;
++import android.widget.Button;
++import android.widget.ImageButton;
++import android.widget.LinearLayout;
++import android.widget.TextView;
++
++import androidx.appcompat.app.AlertDialog;
++import androidx.appcompat.app.AppCompatActivity;
++
++import java.io.File;
++
++import hu.matusz.travelapp.classes.CustomMarker;
++import hu.matusz.travelapp.utils.InfoPanelAnimator;
++
++public class MapView extends AppCompatActivity {
++    private static final String TAG = "MainActivity";
++
++    private MapView map;
++    private LinearLayout infoPanel;
++    private TextView pinTitle;
++    private ImageButton closePanelButton;
++    private Button deletePinButton;
++    private Marker selectedMarker = null;
++
++    // only for development
++    private int markerCounter = 0;
++
++    /**
++     * Creates a osm map
++     * @param savedInstanceState If the activity is being re-initialized after
++     *     previously being shut down then this Bundle contains the data it most
++     *     recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
++     *
++     */
++    @Override
++    protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++
++        Context ctx = getApplicationContext();
++
++        // Setup internal tile cache (no permissions needed)
++        File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
++        if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
++        Configuration.getInstance().setOsmdroidBasePath(osmdroidBasePath);
++        Configuration.getInstance().setOsmdroidTileCache(new File(osmdroidBasePath, "tiles"));
++
++        // Load preferences using AndroidX
++        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
++        Configuration.getInstance().load(ctx, prefs);
++
++        // Set layout
++        setContentView(R.layout.activity_map);
++
++        // Initialize the MapView
++        map = findViewById(R.id.map);
++        map.setTileSource(TileSourceFactory.MAPNIK);
++        map.setTilesScaledToDpi(true);
++        map.setBuiltInZoomControls(true);
++        map.setMultiTouchControls(true);
++
++        // Initialize views
++        infoPanel = findViewById(R.id.info_panel);
++        pinTitle = findViewById(R.id.pin_title);
++        closePanelButton = findViewById(R.id.close_panel_button);
++        deletePinButton = findViewById(R.id.delete_pin_button);
++
++        // closes infoPanel
++        closePanelButton.setOnClickListener(v -> {
++            closeInfoPanel();
++            selectedMarker = null;
++        });
++
++        // configure delete button
++        deletePinButton.setOnClickListener(v -> {
++            if (selectedMarker != null) {
++
++                // Alerts before deleting
++                new AlertDialog.Builder(map.getContext())
++                        .setTitle("Remove pin")
++                        .setMessage("Do you want to remove the pin \"" + selectedMarker.getTitle() + "\" ?")
++                        .setPositiveButton("Remove", (dialog, which) -> {
++                            map.getOverlays().remove(selectedMarker);
++                            closeInfoPanel();
++                            selectedMarker = null;
++                            map.invalidate();
++                        })
++                        .setNegativeButton("Cancel", null)
++                        .show();
++            }
++        });
++
++        // Add event listener to detect map taps
++        map.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
++            @Override
++            public boolean singleTapConfirmedHelper(GeoPoint p) {
++                // Add marker at tapped location
++                addMarkerAt(p);
++                return true;
++            }
++
++            @Override
++            public boolean longPressHelper(GeoPoint p) {
++                return false;
++            }
++        }));
++
++        // Center map on given location
++        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
++        IMapController mapController = map.getController();
++        mapController.setZoom(19);
++        mapController.setCenter(startPoint);
++
++        // Add marker
++        Marker startMarker = new Marker(map);
++        startMarker.setPosition(startPoint);
++        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
++        startMarker.setTitle("Get doxed lol");
++        map.getOverlays().add(startMarker);
++
++        // refresh view
++        map.invalidate();
++    }
++
++    /**
++     * Adds a marker at a given point
++     * @param point Location where marker should be added
++     */
++    private void addMarkerAt(GeoPoint point) {
++        CustomMarker marker = new CustomMarker(map, point);
++        marker.setTitle("New Pin " + markerCounter);
++        selectedMarker = marker;
++        markerCounter++;
++
++        // defines behavior of pins when clicked
++        marker.setOnMarkerClickListener((m, mapView) -> {
++            if(m.equals((selectedMarker)))
++                return true;
++
++            selectedMarker = m;
++            openInfoPanel(m);
++
++            return true;
++        });
++
++        map.getOverlays().add(marker);
++        openInfoPanel(marker);
++        map.invalidate();
++    }
++
++    /**
++     * Opens the info panel to the given marker
++     * @param marker The marker to which the info panel should be shown
++     */
++    private void openInfoPanel(Marker marker) {
++        pinTitle.setText(marker.getTitle());
++        if (!(infoPanel.getVisibility() == View.VISIBLE))
++            InfoPanelAnimator.showPanel(infoPanel);
++    }
++
++    /**
++     * Closes info panel
++     */
++    private void closeInfoPanel() {
++        InfoPanelAnimator.hidePanel(infoPanel);
++    }
++
++}
+\ No newline at end of file
