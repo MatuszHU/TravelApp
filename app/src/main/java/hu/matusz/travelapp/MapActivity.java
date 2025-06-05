@@ -8,6 +8,7 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Overlay;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -172,17 +173,10 @@ public class MapActivity extends AppCompatActivity {
         }));
 
         // Center map on example location
-        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
+        GeoPoint startPoint = new GeoPoint(39.221688, -8.687812);
         IMapController mapController = map.getController();
-        mapController.setZoom(19);
+        mapController.setZoom(17);
         mapController.setCenter(startPoint);
-
-        // Add example marker
-        Marker startMarker = new Marker(map);
-        startMarker.setPosition(startPoint);
-        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        startMarker.setTitle("Get doxed lol");
-        map.getOverlays().add(startMarker);
 
         // refresh view
         map.invalidate();
@@ -227,6 +221,12 @@ public class MapActivity extends AppCompatActivity {
      * @param originalPoint  The location originally tapped by the user (used for animation).
      */
     private void placeMarker(GeoPoint finalPoint, String name, GeoPoint originalPoint) {
+        // Prevent duplicate markers near the same location
+        if (isMarkerAlreadyPlaced(finalPoint, 5.0)) {
+            Toast.makeText(MapActivity.this, "A pin already exists here", Toast.LENGTH_SHORT).show();
+            return; // Skip placing if too close to an existing marker
+        }
+
         // Create marker starting at the tap location
         CustomMarker marker = new CustomMarker(map, originalPoint);
         marker.setTitle(name);
@@ -250,7 +250,7 @@ public class MapActivity extends AppCompatActivity {
         double distanceMeters = originalPoint.distanceToAsDouble(finalPoint);
         if (distanceMeters > 0) {
             MarkerAnimator.animateMarkerTo(marker, originalPoint, finalPoint, map);
-            Toast.makeText(MapActivity.this, "Snapped to nearest point of interest", Toast.LENGTH_SHORT);
+            Toast.makeText(MapActivity.this, "Snapped to nearest point of interest", Toast.LENGTH_SHORT).show();
 
         } else {
             marker.setPosition(finalPoint); // Set final position directly if close enough
@@ -258,6 +258,27 @@ public class MapActivity extends AppCompatActivity {
         }
 
     }
+
+    /**
+     * Checks if a marker already exists within a given radius of the specified location.
+     *
+     * @param location The location to check.
+     * @param radiusMeters Distance threshold to consider a marker as duplicate.
+     * @return true if a nearby marker exists, false otherwise.
+     */
+    private boolean isMarkerAlreadyPlaced(GeoPoint location, double radiusMeters) {
+        for (Overlay overlay : map.getOverlays()) {
+            if (overlay instanceof Marker) {
+                Marker existingMarker = (Marker) overlay;
+                double distance = existingMarker.getPosition().distanceToAsDouble(location);
+                if (distance < radiusMeters) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Opens the info panel to the given marker
