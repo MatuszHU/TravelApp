@@ -12,11 +12,12 @@ import hu.matusz.travelapp.R;
 
 /**
  * Custom marker
+ * @author mmoel
  */
 public class CustomMarker extends Marker {
 
     /**
-     * Constructor
+     * Creates Marker with icon and position
      * @param mapView view on which marker is
      * @param point location where marker should be added
      */

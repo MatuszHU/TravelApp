@@ -30,6 +30,10 @@ import hu.matusz.travelapp.util.database.FirestoreDataHandler;
 import hu.matusz.travelapp.util.database.models.GeoLocation;
 import hu.matusz.travelapp.util.database.models.User;
 
+/**
+ * Activity for controlling the map
+ * @author mmoel matusz
+ */
 public class MapActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private User user;
@@ -58,6 +62,7 @@ public class MapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         Context ctx = getApplicationContext();
+        fdt = new FirestoreDataHandler();
         fdt.init();
         // Setup internal tile cache (no permissions needed)
         File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
@@ -92,10 +97,11 @@ public class MapActivity extends AppCompatActivity {
             closeInfoPanel();
             selectedMarker = null;
         });
-        savePinButton.setOnClickListener(v ->{
-            GeoLocation loc = new GeoLocation(selectedMarker.getPosition().getLatitude(),selectedMarker.getPosition().getLongitude(),selectedMarker.getTitle(), u.getUUID());
-            fdt.saveLocation(loc);
-        });
+        //todo: add button on layout
+//        savePinButton.setOnClickListener(v ->{
+//            GeoLocation loc = new GeoLocation(selectedMarker.getPosition().getLatitude(),selectedMarker.getPosition().getLongitude(),selectedMarker.getTitle(), u.getUUID());
+//            fdt.saveLocation(loc);
+//        });
         // configure delete button
         deletePinButton.setOnClickListener(v -> {
             if (selectedMarker != null) {
@@ -150,6 +156,7 @@ public class MapActivity extends AppCompatActivity {
     /**
      * Adds a marker at a given point
      * @param point Location where marker should be added
+     * @see CustomMarker
      */
     private void addMarkerAt(GeoPoint point) {
         CustomMarker marker = new CustomMarker(map, point);
@@ -176,6 +183,7 @@ public class MapActivity extends AppCompatActivity {
     /**
      * Opens the info panel to the given marker
      * @param marker The marker to which the info panel should be shown
+     * @see InfoPanelAnimator
      */
     private void openInfoPanel(Marker marker) {
         pinTitle.setText(marker.getTitle());

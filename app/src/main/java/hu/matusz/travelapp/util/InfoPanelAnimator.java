@@ -5,6 +5,7 @@ import android.view.animation.TranslateAnimation;
 
 /**
  * Supplies slide up animation for the info panel
+ * @author mmoel
  */
 public class InfoPanelAnimator {
 
