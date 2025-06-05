@@ -166,13 +166,13 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 // Add marker at tapped location
-                addMarkerWithSnap(p); // Snap to POI
+                addSnappedMarkerFromTap(p); // Snap to POI
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                addMarkerAtExactPoint(p);
+                addCustomMarkerAtTap(p);
                 return true;
             }
         }));
@@ -192,7 +192,7 @@ public class MapActivity extends AppCompatActivity {
      *
      * @param tapPoint The original point tapped by the user.
      */
-    private void addMarkerWithSnap(GeoPoint tapPoint) {
+    private void addSnappedMarkerFromTap(GeoPoint tapPoint) {
 
         //determines to what kind of poi a pin should snap to e.g. a building or a city
         //based on the in app zoom
@@ -236,7 +236,7 @@ public class MapActivity extends AppCompatActivity {
      *
      * @param point The exact GeoPoint where the user long-pressed.
      */
-    private void addMarkerAtExactPoint(GeoPoint point) {
+    private void addCustomMarkerAtTap(GeoPoint point) {
         placeMarker(point, "Custom Pin " + customMarkerCounter++, point);
     }
 
