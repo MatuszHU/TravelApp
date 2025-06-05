@@ -37,7 +37,10 @@ import hu.matusz.travelapp.util.database.FirestoreDataHandler;
 import hu.matusz.travelapp.util.database.models.Comment;
 import hu.matusz.travelapp.util.database.models.User;
 
-
+/**
+ * Activity to handle the sign in with Google Firebase
+ * @author matusz
+ */
 public class GoogleSignInActivity extends AppCompatActivity {
     private FirestoreDataHandler fc;
     private UUIDGen u = new UUIDGen();

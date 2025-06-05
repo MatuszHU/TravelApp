@@ -1,5 +1,8 @@
 package hu.matusz.travelapp.util.database.models;
 
+/**
+ * @author matusz
+ */
 public class GeoLocation {
     private double coordX;
     private double coordY;

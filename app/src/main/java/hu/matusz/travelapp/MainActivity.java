@@ -18,7 +18,10 @@ import com.google.android.gms.common.SignInButton;
 import com.google.firebase.database.FirebaseDatabase;
 
 
-
+/**
+ * MainActivity, that starts with sign in
+ * @author matusz
+ */
 public class MainActivity extends AppCompatActivity {
     private SignInButton signInButton;
     @Override
