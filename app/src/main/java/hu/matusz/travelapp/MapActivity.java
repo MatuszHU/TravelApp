@@ -251,7 +251,7 @@ public class MapActivity extends AppCompatActivity {
      */
     private void placeMarker(GeoPoint finalPoint, String name, GeoPoint originalPoint) {
         // Prevent duplicate markers near the same location
-        if (isMarkerAlreadyPlaced(finalPoint, 5.0)) {
+        if (isMarkerAlreadyPlaced(finalPoint)) {
             Toast.makeText(MapActivity.this, "A pin already exists here", Toast.LENGTH_SHORT).show();
             return; // Skip placing if too close to an existing marker
         }
@@ -292,15 +292,13 @@ public class MapActivity extends AppCompatActivity {
      * Checks if a marker already exists within a given radius of the specified location.
      *
      * @param location The location to check.
-     * @param radiusMeters Distance threshold to consider a marker as duplicate.
      * @return true if a nearby marker exists, false otherwise.
      */
-    private boolean isMarkerAlreadyPlaced(GeoPoint location, double radiusMeters) {
+    private boolean isMarkerAlreadyPlaced(GeoPoint location) {
         for (Overlay overlay : map.getOverlays()) {
-            if (overlay instanceof Marker) {
-                Marker existingMarker = (Marker) overlay;
+            if (overlay instanceof Marker existingMarker) {
                 double distance = existingMarker.getPosition().distanceToAsDouble(location);
-                if (distance < radiusMeters) {
+                if (distance < 5) { //Distance threshold to consider a marker as duplicate.
                     return true;
                 }
             }
