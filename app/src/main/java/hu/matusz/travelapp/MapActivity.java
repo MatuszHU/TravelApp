@@ -12,6 +12,7 @@ import org.osmdroid.views.overlay.Marker;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,8 +52,7 @@ public class MapActivity extends AppCompatActivity {
     private Marker selectedMarker = null;
     private FirestoreDataHandler fdt;
     private UUIDGen u;
-    // only for development
-    private int markerCounter = 0;
+    private int customMarkerCounter = 0;
 
     /**
      * Creates a osm map
@@ -160,23 +160,24 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 // Add marker at tapped location
-                addMarkerAt(p);
+                addMarkerWithSnap(p); // Snap to POI
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                return false;
+                addMarkerAtExactPoint(p);
+                return true;
             }
         }));
 
-        // Center map on given location
+        // Center map on example location
         GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
         IMapController mapController = map.getController();
         mapController.setZoom(19);
         mapController.setCenter(startPoint);
 
-        // Add marker
+        // Add example marker
         Marker startMarker = new Marker(map);
         startMarker.setPosition(startPoint);
         startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
@@ -188,26 +189,32 @@ public class MapActivity extends AppCompatActivity {
     }
 
     /**
-     * Called when the user taps on the map.
-     * Attempts to find a nearby POI via Nominatim and place a marker at the POI location.
-     * Falls back to the original tap location if no POI is found.
+     * Adds a marker by snapping to the nearest POI using reverse geocoding.
+     * Falls back to the tap location if no meaningful data is found.
      *
-     * @param tapPoint The original location on the map where the user tapped.
+     * @param tapPoint The original point tapped by the user.
      */
-    private void addMarkerAt(GeoPoint tapPoint) {
+    private void addMarkerWithSnap(GeoPoint tapPoint) {
         NominatimService.reverseGeocode(tapPoint, new NominatimService.GeocodingResultCallback() {
             @Override
             public void onResult(String title, GeoPoint snappedPoint) {
-                // POI found → place marker at POI center
                 placeMarker(snappedPoint, title, tapPoint);
             }
 
             @Override
             public void onError(GeoPoint fallbackPoint) {
-                // No POI found or error → use original location
-                placeMarker(fallbackPoint, "Dropped Pin", fallbackPoint);
+                placeMarker(fallbackPoint, "Custom Pin " + customMarkerCounter++, fallbackPoint);
             }
         });
+    }
+
+    /**
+     * Adds a marker directly at the long-pressed location without snapping.
+     *
+     * @param point The exact GeoPoint where the user long-pressed.
+     */
+    private void addMarkerAtExactPoint(GeoPoint point) {
+        placeMarker(point, "Custom Pin " + customMarkerCounter++, point);
     }
 
 
@@ -242,7 +249,11 @@ public class MapActivity extends AppCompatActivity {
         double distanceMeters = originalPoint.distanceToAsDouble(finalPoint);
         if (distanceMeters > 0) {
             MarkerAnimator.animateMarkerTo(marker, originalPoint, finalPoint, map);
-            Toast.makeText(this, "Snapped to nearest point of interest", Toast.LENGTH_SHORT).show();
+            Toast toast = Toast.makeText(getApplicationContext(), "Snapped to nearest point of interest", Toast.LENGTH_SHORT);
+            //todo: not working dunno why
+            toast.setGravity(Gravity.RIGHT | Gravity.CENTER_HORIZONTAL, 0, 0);
+            toast.show();
+
         } else {
             marker.setPosition(finalPoint); // Set final position directly if close enough
         }
