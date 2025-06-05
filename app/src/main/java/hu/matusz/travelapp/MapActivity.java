@@ -188,19 +188,20 @@ public class MapActivity extends AppCompatActivity {
     /**
      * Adds a marker at a given point
      * @param point Location where marker should be added
-     * @see CustomMarker
+     * @see NominatimService
+     *
      */
     private void addMarkerAt(GeoPoint point) {
         // Clip to nearest POI using Nominatim
-        NominatimService.reverseGeocode(point, new NominatimService.GeocodingCallback() {
+        NominatimService.reverseGeocode(point, new NominatimService.GeocodingResultCallback() {
             @Override
-            public void onSuccess(String name) {
-                placeMarker(point, name);
+            public void onResult(String title, GeoPoint snappedPoint) {
+                placeMarker(snappedPoint, title);
             }
 
             @Override
-            public void onError(String fallbackName) {
-                placeMarker(point, fallbackName);
+            public void onError(GeoPoint fallbackPoint) {
+                placeMarker(fallbackPoint, "Dropped Pin");
             }
         });
     }

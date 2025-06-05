@@ -28,12 +28,17 @@ public class NominatimService {
     private static final OkHttpClient client = new OkHttpClient();
     private static final String USER_AGENT = "TravelApp/1.0 (moritz-alexander.moeller@stud.hs-hannover.de)"; // ← Use valid contact!
 
+    public interface GeocodingResultCallback {
+        void onResult(String displayName, GeoPoint snappedLocation);
+        void onError(GeoPoint originalPoint);
+    }
+
     /**
      * Searches with the location of a point for the nearest address
      * @param point Location for which address should be found
      * @param callback Message for status of geocode
      */
-    public static void reverseGeocode(GeoPoint point, GeocodingCallback callback) {
+    public static void reverseGeocode(GeoPoint point, GeocodingResultCallback callback) {
         String url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
                 point.getLatitude() + "&lon=" + point.getLongitude() + "&zoom=18&addressdetails=1";
 
@@ -45,20 +50,25 @@ public class NominatimService {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.e("Nominatim", "Request failed", e);
-                runOnUiThread(() -> callback.onError("Dropped Pin"));
+                runOnUiThread(() -> callback.onError(point));
             }
+
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     String body = response.body().string();
                     JSONObject json = new JSONObject(body);
+
+
                     String name = json.optString("name", "Dropped Pin");
-                    runOnUiThread(() -> callback.onSuccess(name));
+                    double lat = json.optDouble("lat", point.getLatitude());
+                    double lon = json.optDouble("lon", point.getLongitude());
+                    GeoPoint snappedPoint = new GeoPoint(lat, lon);
+
+                    runOnUiThread(() -> callback.onResult(name, snappedPoint));
                 } catch (Exception e) {
-                    Log.e("Nominatim", "Parsing failed", e);
-                    runOnUiThread(() -> callback.onError("Dropped Pin"));
+                    runOnUiThread(() -> callback.onError(point));
                 }
             }
 
