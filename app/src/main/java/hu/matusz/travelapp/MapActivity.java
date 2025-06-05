@@ -189,21 +189,7 @@ public class MapActivity extends AppCompatActivity {
      * @param tapPoint The original point tapped by the user.
      */
     private void addMarkerWithSnap(GeoPoint tapPoint) {
-
-        //determines to what kind of poi a pin should snap to e.g. a building or a city
-        //based on the in app zoom
-        double mapZoom = map.getZoomLevelDouble();
-        int nominatimZoom;
-
-        if (mapZoom >= 14) {
-            nominatimZoom = 18; // POIs/buildings
-        } else if (mapZoom >= 7) {
-            nominatimZoom = 10; // city/town
-        } else { //zoom <= 6
-            nominatimZoom = 3; // country
-        }
-
-        NominatimService.reverseGeocode(tapPoint, nominatimZoom, new NominatimService.GeocodingResultCallback() {
+        NominatimService.reverseGeocode(tapPoint, new NominatimService.GeocodingResultCallback() {
             @Override
             public void onResult(String title, GeoPoint snappedPoint) {
                 placeMarker(snappedPoint, title, tapPoint);
@@ -211,11 +197,10 @@ public class MapActivity extends AppCompatActivity {
 
             @Override
             public void onError(GeoPoint fallbackPoint) {
-                placeMarker(fallbackPoint, "Dropped Pin", fallbackPoint);
+                placeMarker(fallbackPoint, "Custom Pin " + customMarkerCounter++, fallbackPoint);
             }
         });
     }
-
 
     /**
      * Adds a marker directly at the long-pressed location without snapping.

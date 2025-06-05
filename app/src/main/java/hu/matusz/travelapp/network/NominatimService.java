@@ -31,16 +31,11 @@ public class NominatimService {
     /**
      * Searches with the location of a point for the nearest address
      * @param point Location for which address should be found
-     * @param nominatimZoom Zoom level
      * @param callback Message for status of geocode
      */
-    public static void reverseGeocode(GeoPoint point, int nominatimZoom, GeocodingResultCallback callback){
-
-        String url = "https://nominatim.openstreetmap.org/reverse?format=json"
-                + "&lat=" + point.getLatitude()
-                + "&lon=" + point.getLongitude()
-                + "&zoom=" + nominatimZoom
-                + "&addressdetails=1";
+    public static void reverseGeocode(GeoPoint point, GeocodingResultCallback callback) {
+        String url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
+                point.getLatitude() + "&lon=" + point.getLongitude() + "&zoom=18&addressdetails=1";
 
         Request request = new Request.Builder()
                 .url(url)
