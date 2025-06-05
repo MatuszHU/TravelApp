@@ -173,17 +173,10 @@ public class MapActivity extends AppCompatActivity {
         }));
 
         // Center map on example location
-        GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
+        GeoPoint startPoint = new GeoPoint(39.221688, -8.687812);
         IMapController mapController = map.getController();
-        mapController.setZoom(19);
+        mapController.setZoom(17);
         mapController.setCenter(startPoint);
-
-        // Add example marker
-        Marker startMarker = new Marker(map);
-        startMarker.setPosition(startPoint);
-        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        startMarker.setTitle("Get doxed lol");
-        map.getOverlays().add(startMarker);
 
         // refresh view
         map.invalidate();
