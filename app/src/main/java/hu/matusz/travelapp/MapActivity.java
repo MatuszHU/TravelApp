@@ -53,6 +53,8 @@ public class MapActivity extends AppCompatActivity {
     private FirestoreDataHandler fdt;
     private UUIDGen u;
     private int customMarkerCounter = 0;
+    private IMapController mapController;
+
 
     /**
      * Creates a osm map
@@ -90,6 +92,7 @@ public class MapActivity extends AppCompatActivity {
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
+        mapController = map.getController();
 
         user = (User) getIntent().getSerializableExtra("user");
 
@@ -176,7 +179,6 @@ public class MapActivity extends AppCompatActivity {
 
         // Center map on example location
         GeoPoint startPoint = new GeoPoint(39.221688, -8.687812);
-        IMapController mapController = map.getController();
         mapController.setZoom(17);
         mapController.setCenter(startPoint);
 
@@ -264,7 +266,7 @@ public class MapActivity extends AppCompatActivity {
             if (m.equals(selectedMarker)) return true;
             selectedMarker = m;
             openInfoPanel(m);
-            map.getController().animateTo(m.getPosition()); // Pan on click
+            mapController.animateTo(m.getPosition()); // Pan on click
             return true;
         });
 
@@ -281,7 +283,7 @@ public class MapActivity extends AppCompatActivity {
 
         } else {
             marker.setPosition(finalPoint); // Set final position directly if close enough
-            map.getController().animateTo(finalPoint); // Pan on static pin
+            mapController.animateTo(finalPoint); // Pan on static pin
         }
 
     }
