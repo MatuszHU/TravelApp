@@ -36,6 +36,7 @@ android {
 dependencies {
     implementation (libs.osmdroid.android)
     implementation (libs.osmbonuspack)
+
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
@@ -47,6 +48,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.credentials:credentials:1.2.0-alpha03")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.0.0-beta02")
+
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

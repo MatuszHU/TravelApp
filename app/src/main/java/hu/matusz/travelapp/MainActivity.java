@@ -18,6 +18,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.firebase.database.FirebaseDatabase;
 
 
+
 public class MainActivity extends AppCompatActivity {
     private SignInButton signInButton;
     @Override
@@ -37,15 +38,19 @@ public class MainActivity extends AppCompatActivity {
 
         signInButton.setSize(SignInButton.SIZE_WIDE);
 
+
         signInButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, GoogleSignInActivity.class);
             startActivity(intent);
+
         });
 
         /*SQLSelect statement = new SQLSelect();
         Note: Using backticks (`) is not necessary, but highly recommended by the developers.
         ResultSet dataSet = statement.getData("SELECT `name` FROM `users`");
         Log.d("SQLLog", dataSet.toString());*/
+
+
 
 
 
