@@ -20,11 +20,6 @@ import okhttp3.Response;
  */
 public class NominatimService {
 
-    public interface GeocodingCallback {
-        void onSuccess(String name);
-        void onError(String fallbackName);
-    }
-
     private static final OkHttpClient client = new OkHttpClient();
     private static final String USER_AGENT = "TravelApp/1.0 (moritz-alexander.moeller@stud.hs-hannover.de)"; // ← Use valid contact!
 
@@ -48,12 +43,23 @@ public class NominatimService {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
+            /**
+             * Sends a callback, when request to Nominatim failes
+             * @param call Call
+             * @param e Exception
+             */
             @Override
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> callback.onError(point));
             }
 
 
+            /**
+             * When request successful provides Geopoint
+             * @param call Call
+             * @param response The geo response of Nominatim
+             * @throws IOException Exception
+             */
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 try {
@@ -72,6 +78,10 @@ public class NominatimService {
                 }
             }
 
+            /**
+             * Looper for geocoding
+             * @param r Runnable
+             */
             private void runOnUiThread(Runnable r) {
                 new Handler(Looper.getMainLooper()).post(r);
             }
