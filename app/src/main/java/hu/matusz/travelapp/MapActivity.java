@@ -92,6 +92,7 @@ public class MapActivity extends AppCompatActivity {
         infoPanel = findViewById(R.id.info_panel);
         pinTitle = findViewById(R.id.pin_title);
         closePanelButton = findViewById(R.id.close_panel_button);
+        savePinButton = findViewById(R.id.save_pin_button);
         deletePinButton = findViewById(R.id.delete_pin_button);
 
         // Edit button for pin title
@@ -124,11 +125,13 @@ public class MapActivity extends AppCompatActivity {
             closeInfoPanel();
             selectedMarker = null;
         });
-        //todo: add button on layout
-//        savePinButton.setOnClickListener(v ->{
-//            GeoLocation loc = new GeoLocation(selectedMarker.getPosition().getLatitude(),selectedMarker.getPosition().getLongitude(),selectedMarker.getTitle(), u.getUUID());
-//            fdt.saveLocation(loc);
-//        });
+
+        // saves pin in db
+        // not working rn, because of no db connection
+        savePinButton.setOnClickListener(v ->{
+            GeoLocation loc = new GeoLocation(selectedMarker.getPosition().getLatitude(),selectedMarker.getPosition().getLongitude(),selectedMarker.getTitle(), u.getUUID());
+            fdt.saveLocation(loc);
+        });
 
         //todo: delete pin from db?
         // configure delete button
