@@ -1,4 +1,4 @@
-package hu.matusz.travelapp.util;
+package hu.matusz.travelapp.util.animations;
 
 import android.view.View;
 import android.view.animation.TranslateAnimation;
