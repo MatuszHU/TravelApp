@@ -219,10 +219,10 @@ public class MapActivity extends AppCompatActivity {
 
 
     /**
-     * Places a marker at the specified location with the given title.
-     * Optionally animates the marker from the user's tap point to the POI location.
+     * Places a marker at the specified location with the given title,
+     * and pans the map smoothly to center on the marker.
      *
-     * @param finalPoint     The final marker location (either POI or tap location).
+     * @param finalPoint     The final marker location (snapped or exact).
      * @param name           The title to display for the marker.
      * @param originalPoint  The location originally tapped by the user (used for animation).
      */
@@ -237,6 +237,7 @@ public class MapActivity extends AppCompatActivity {
             if (m.equals(selectedMarker)) return true;
             selectedMarker = m;
             openInfoPanel(m);
+            map.getController().animateTo(m.getPosition()); // Pan on click
             return true;
         });
 
@@ -249,13 +250,11 @@ public class MapActivity extends AppCompatActivity {
         double distanceMeters = originalPoint.distanceToAsDouble(finalPoint);
         if (distanceMeters > 0) {
             MarkerAnimator.animateMarkerTo(marker, originalPoint, finalPoint, map);
-            Toast toast = Toast.makeText(getApplicationContext(), "Snapped to nearest point of interest", Toast.LENGTH_SHORT);
-            //todo: not working dunno why
-            toast.setGravity(Gravity.RIGHT | Gravity.CENTER_HORIZONTAL, 0, 0);
-            toast.show();
+            Toast.makeText(MapActivity.this, "Snapped to nearest point of interest", Toast.LENGTH_SHORT);
 
         } else {
             marker.setPosition(finalPoint); // Set final position directly if close enough
+            map.getController().animateTo(finalPoint); // Pan on static pin
         }
 
     }
