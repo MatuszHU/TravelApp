@@ -13,7 +13,6 @@ import org.osmdroid.views.overlay.Overlay;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -66,9 +65,11 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //sets up FirestoreDataHandler, has no db connection for dev purpose
         Context ctx = getApplicationContext();
         fdt = new FirestoreDataHandler();
         fdt.init();
+
         // Setup internal tile cache (no permissions needed)
         File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
         if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
@@ -91,6 +92,7 @@ public class MapActivity extends AppCompatActivity {
 
 
         user = (User) getIntent().getSerializableExtra("user");
+
         // Initialize views
         infoPanel = findViewById(R.id.info_panel);
         pinTitle = findViewById(R.id.pin_title);
@@ -108,6 +110,7 @@ public class MapActivity extends AppCompatActivity {
             input.setText(selectedMarker.getTitle());
             input.setSelection(input.getText().length());
 
+            //Alert for changing the title of a pin
             new AlertDialog.Builder(this)
                     .setTitle("Edit Pin Title")
                     .setView(input)
@@ -136,8 +139,7 @@ public class MapActivity extends AppCompatActivity {
             fdt.saveLocation(loc);
         });
 
-        //todo: delete pin from db?
-        // configure delete button
+        // deletes pin
         deletePinButton.setOnClickListener(v -> {
             if (selectedMarker != null) {
 
@@ -203,12 +205,22 @@ public class MapActivity extends AppCompatActivity {
             nominatimZoom = 3; // country
         }
 
+        // tries to get the GeoPoint from Nominatim
         NominatimService.reverseGeocode(tapPoint, nominatimZoom, new NominatimService.GeocodingResultCallback() {
+            /**
+             * Places marker at given point
+             * @param title Name of the pin
+             * @param snappedPoint Location of POI where the point snaps to
+             */
             @Override
             public void onResult(String title, GeoPoint snappedPoint) {
                 placeMarker(snappedPoint, title, tapPoint);
             }
 
+            /**
+             * When failed to get GeoPoint fallback to tapped point
+             * @param fallbackPoint Point where user tapped
+             */
             @Override
             public void onError(GeoPoint fallbackPoint) {
                 placeMarker(fallbackPoint, "Dropped Pin", fallbackPoint);

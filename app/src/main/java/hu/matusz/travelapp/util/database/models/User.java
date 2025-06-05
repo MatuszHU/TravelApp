@@ -2,6 +2,9 @@ package hu.matusz.travelapp.util.database.models;
 
 import java.io.Serializable;
 
+/**
+ * @author matusz
+ */
 public class User implements Serializable {
     private String userId;
     private String name;
