@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -92,6 +93,31 @@ public class MapActivity extends AppCompatActivity {
         pinTitle = findViewById(R.id.pin_title);
         closePanelButton = findViewById(R.id.close_panel_button);
         deletePinButton = findViewById(R.id.delete_pin_button);
+
+        // Edit button for pin title
+        ImageButton editTitleButton = findViewById(R.id.edit_pin_title_button);
+        editTitleButton.setOnClickListener(v -> {
+            if (selectedMarker == null) return;
+
+            // Create input field with current title
+            final EditText input = new EditText(this);
+            input.setText(selectedMarker.getTitle());
+            input.setSelection(input.getText().length());
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Edit Pin Title")
+                    .setView(input)
+                    .setPositiveButton("Save", (dialog, which) -> {
+                        String newTitle = input.getText().toString().trim();
+                        if (!newTitle.isEmpty()) {
+                            selectedMarker.setTitle(newTitle);
+                            pinTitle.setText(newTitle);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
 
         // closes infoPanel
         closePanelButton.setOnClickListener(v -> {
