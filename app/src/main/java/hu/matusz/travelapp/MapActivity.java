@@ -12,12 +12,14 @@ import org.osmdroid.views.overlay.Marker;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,8 +28,9 @@ import java.io.File;
 
 import hu.matusz.travelapp.classes.CustomMarker;
 import hu.matusz.travelapp.network.NominatimService;
-import hu.matusz.travelapp.util.InfoPanelAnimator;
+import hu.matusz.travelapp.util.animations.InfoPanelAnimator;
 import hu.matusz.travelapp.util.UUIDGen;
+import hu.matusz.travelapp.util.animations.MarkerAnimator;
 import hu.matusz.travelapp.util.database.FirestoreDataHandler;
 import hu.matusz.travelapp.util.database.models.GeoLocation;
 import hu.matusz.travelapp.util.database.models.User;
@@ -49,8 +52,7 @@ public class MapActivity extends AppCompatActivity {
     private Marker selectedMarker = null;
     private FirestoreDataHandler fdt;
     private UUIDGen u;
-    // only for development
-    private int markerCounter = 0;
+    private int customMarkerCounter = 0;
 
     /**
      * Creates a osm map
@@ -158,23 +160,24 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 // Add marker at tapped location
-                addMarkerAt(p);
+                addMarkerWithSnap(p); // Snap to POI
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                return false;
+                addMarkerAtExactPoint(p);
+                return true;
             }
         }));
 
-        // Center map on given location
+        // Center map on example location
         GeoPoint startPoint = new GeoPoint(39.235062, -8.688187); // Mate
         IMapController mapController = map.getController();
         mapController.setZoom(19);
         mapController.setCenter(startPoint);
 
-        // Add marker
+        // Add example marker
         Marker startMarker = new Marker(map);
         startMarker.setPosition(startPoint);
         startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
@@ -186,45 +189,74 @@ public class MapActivity extends AppCompatActivity {
     }
 
     /**
-     * Adds a marker at a given point
-     * @param point Location where marker should be added
-     * @see CustomMarker
+     * Adds a marker by snapping to the nearest POI using reverse geocoding.
+     * Falls back to the tap location if no meaningful data is found.
+     *
+     * @param tapPoint The original point tapped by the user.
      */
-    private void addMarkerAt(GeoPoint point) {
-        // Clip to nearest POI using Nominatim
-        NominatimService.reverseGeocode(point, new NominatimService.GeocodingCallback() {
+    private void addMarkerWithSnap(GeoPoint tapPoint) {
+        NominatimService.reverseGeocode(tapPoint, new NominatimService.GeocodingResultCallback() {
             @Override
-            public void onSuccess(String name) {
-                placeMarker(point, name);
+            public void onResult(String title, GeoPoint snappedPoint) {
+                placeMarker(snappedPoint, title, tapPoint);
             }
 
             @Override
-            public void onError(String fallbackName) {
-                placeMarker(point, fallbackName);
+            public void onError(GeoPoint fallbackPoint) {
+                placeMarker(fallbackPoint, "Custom Pin " + customMarkerCounter++, fallbackPoint);
             }
         });
     }
 
     /**
-     * Adds a marker at a given point
-     * @param point Location where marker should be added
-     * @param name Name of the location
+     * Adds a marker directly at the long-pressed location without snapping.
+     *
+     * @param point The exact GeoPoint where the user long-pressed.
      */
-    private void placeMarker(GeoPoint point, String name) {
-        CustomMarker marker = new CustomMarker(map, point);
+    private void addMarkerAtExactPoint(GeoPoint point) {
+        placeMarker(point, "Custom Pin " + customMarkerCounter++, point);
+    }
+
+
+    /**
+     * Places a marker at the specified location with the given title,
+     * and pans the map smoothly to center on the marker.
+     *
+     * @param finalPoint     The final marker location (snapped or exact).
+     * @param name           The title to display for the marker.
+     * @param originalPoint  The location originally tapped by the user (used for animation).
+     */
+    private void placeMarker(GeoPoint finalPoint, String name, GeoPoint originalPoint) {
+        // Create marker starting at the tap location
+        CustomMarker marker = new CustomMarker(map, originalPoint);
         marker.setTitle(name);
         selectedMarker = marker;
 
+        // Set marker click behavior to open info panel
         marker.setOnMarkerClickListener((m, mapView) -> {
             if (m.equals(selectedMarker)) return true;
             selectedMarker = m;
             openInfoPanel(m);
+            map.getController().animateTo(m.getPosition()); // Pan on click
             return true;
         });
 
+        // Add marker to the map and show info panel
         map.getOverlays().add(marker);
         openInfoPanel(marker);
         map.invalidate();
+
+        // Animate only if the snapped point is significantly different from the original
+        double distanceMeters = originalPoint.distanceToAsDouble(finalPoint);
+        if (distanceMeters > 0) {
+            MarkerAnimator.animateMarkerTo(marker, originalPoint, finalPoint, map);
+            Toast.makeText(MapActivity.this, "Snapped to nearest point of interest", Toast.LENGTH_SHORT);
+
+        } else {
+            marker.setPosition(finalPoint); // Set final position directly if close enough
+            map.getController().animateTo(finalPoint); // Pan on static pin
+        }
+
     }
 
     /**
