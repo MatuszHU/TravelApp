@@ -6,6 +6,9 @@ import android.widget.ImageView;
 
 import hu.matusz.travelapp.R;
 
+/**
+ * @author matusz
+ */
 public class SimpleLoadingAnimation {
     private ImageView loadingImage;
     private float currentRotation = 0f;

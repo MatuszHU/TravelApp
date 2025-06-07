@@ -13,7 +13,6 @@ import org.osmdroid.views.overlay.Overlay;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -54,6 +53,8 @@ public class MapActivity extends AppCompatActivity {
     private FirestoreDataHandler fdt;
     private UUIDGen u;
     private int customMarkerCounter = 0;
+    private IMapController mapController;
+
 
     /**
      * Creates a osm map
@@ -66,9 +67,11 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //sets up FirestoreDataHandler, has no db connection for dev purpose
         Context ctx = getApplicationContext();
         fdt = new FirestoreDataHandler();
         fdt.init();
+
         // Setup internal tile cache (no permissions needed)
         File osmdroidBasePath = new File(ctx.getFilesDir(), "osmdroid");
         if (!osmdroidBasePath.exists()) osmdroidBasePath.mkdirs();
@@ -89,8 +92,10 @@ public class MapActivity extends AppCompatActivity {
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
+        mapController = map.getController();
 
         user = (User) getIntent().getSerializableExtra("user");
+
         // Initialize views
         infoPanel = findViewById(R.id.info_panel);
         pinTitle = findViewById(R.id.pin_title);
@@ -108,6 +113,7 @@ public class MapActivity extends AppCompatActivity {
             input.setText(selectedMarker.getTitle());
             input.setSelection(input.getText().length());
 
+            //Alert for changing the title of a pin
             new AlertDialog.Builder(this)
                     .setTitle("Edit Pin Title")
                     .setView(input)
@@ -136,8 +142,7 @@ public class MapActivity extends AppCompatActivity {
             fdt.saveLocation(loc);
         });
 
-        //todo: delete pin from db?
-        // configure delete button
+        // deletes pin
         deletePinButton.setOnClickListener(v -> {
             if (selectedMarker != null) {
 
@@ -161,20 +166,19 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
                 // Add marker at tapped location
-                addMarkerWithSnap(p); // Snap to POI
+                addSnappedMarkerFromTap(p); // Snap to POI
                 return true;
             }
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                addMarkerAtExactPoint(p);
+                addCustomMarkerAtTap(p);
                 return true;
             }
         }));
 
         // Center map on example location
         GeoPoint startPoint = new GeoPoint(39.221688, -8.687812);
-        IMapController mapController = map.getController();
         mapController.setZoom(17);
         mapController.setCenter(startPoint);
 
@@ -188,7 +192,7 @@ public class MapActivity extends AppCompatActivity {
      *
      * @param tapPoint The original point tapped by the user.
      */
-    private void addMarkerWithSnap(GeoPoint tapPoint) {
+    private void addSnappedMarkerFromTap(GeoPoint tapPoint) {
 
         //determines to what kind of poi a pin should snap to e.g. a building or a city
         //based on the in app zoom
@@ -203,12 +207,22 @@ public class MapActivity extends AppCompatActivity {
             nominatimZoom = 3; // country
         }
 
+        // tries to get the GeoPoint from Nominatim
         NominatimService.reverseGeocode(tapPoint, nominatimZoom, new NominatimService.GeocodingResultCallback() {
+            /**
+             * Places marker at given point
+             * @param title Name of the pin
+             * @param snappedPoint Location of POI where the point snaps to
+             */
             @Override
             public void onResult(String title, GeoPoint snappedPoint) {
                 placeMarker(snappedPoint, title, tapPoint);
             }
 
+            /**
+             * When failed to get GeoPoint fallback to tapped point
+             * @param fallbackPoint Point where user tapped
+             */
             @Override
             public void onError(GeoPoint fallbackPoint) {
                 placeMarker(fallbackPoint, "Dropped Pin", fallbackPoint);
@@ -222,7 +236,7 @@ public class MapActivity extends AppCompatActivity {
      *
      * @param point The exact GeoPoint where the user long-pressed.
      */
-    private void addMarkerAtExactPoint(GeoPoint point) {
+    private void addCustomMarkerAtTap(GeoPoint point) {
         placeMarker(point, "Custom Pin " + customMarkerCounter++, point);
     }
 
@@ -237,7 +251,7 @@ public class MapActivity extends AppCompatActivity {
      */
     private void placeMarker(GeoPoint finalPoint, String name, GeoPoint originalPoint) {
         // Prevent duplicate markers near the same location
-        if (isMarkerAlreadyPlaced(finalPoint, 5.0)) {
+        if (isMarkerAlreadyPlaced(finalPoint)) {
             Toast.makeText(MapActivity.this, "A pin already exists here", Toast.LENGTH_SHORT).show();
             return; // Skip placing if too close to an existing marker
         }
@@ -252,7 +266,7 @@ public class MapActivity extends AppCompatActivity {
             if (m.equals(selectedMarker)) return true;
             selectedMarker = m;
             openInfoPanel(m);
-            map.getController().animateTo(m.getPosition()); // Pan on click
+            mapController.animateTo(m.getPosition()); // Pan on click
             return true;
         });
 
@@ -269,7 +283,7 @@ public class MapActivity extends AppCompatActivity {
 
         } else {
             marker.setPosition(finalPoint); // Set final position directly if close enough
-            map.getController().animateTo(finalPoint); // Pan on static pin
+            mapController.animateTo(finalPoint); // Pan on static pin
         }
 
     }
@@ -278,15 +292,13 @@ public class MapActivity extends AppCompatActivity {
      * Checks if a marker already exists within a given radius of the specified location.
      *
      * @param location The location to check.
-     * @param radiusMeters Distance threshold to consider a marker as duplicate.
      * @return true if a nearby marker exists, false otherwise.
      */
-    private boolean isMarkerAlreadyPlaced(GeoPoint location, double radiusMeters) {
+    private boolean isMarkerAlreadyPlaced(GeoPoint location) {
         for (Overlay overlay : map.getOverlays()) {
-            if (overlay instanceof Marker) {
-                Marker existingMarker = (Marker) overlay;
+            if (overlay instanceof Marker existingMarker) {
                 double distance = existingMarker.getPosition().distanceToAsDouble(location);
-                if (distance < radiusMeters) {
+                if (distance < 5) { //Distance threshold to consider a marker as duplicate.
                     return true;
                 }
             }

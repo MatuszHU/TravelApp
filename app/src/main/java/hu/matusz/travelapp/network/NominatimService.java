@@ -17,12 +17,16 @@ import okhttp3.Response;
 
 /**
  * Class to use nominatim service for geocoding
+ * @author mmoel
  */
 public class NominatimService {
 
     private static final OkHttpClient client = new OkHttpClient();
-    private static final String USER_AGENT = "TravelApp/1.0 (moritz-alexander.moeller@stud.hs-hannover.de)"; // ← Use valid contact!
+    private static final String USER_AGENT = "TravelApp/1.0 (moritz-alexander.moeller@stud.hs-hannover.de)";
 
+    /**
+     * Interface for callback
+     */
     public interface GeocodingResultCallback {
         void onResult(String displayName, GeoPoint snappedLocation);
         void onError(GeoPoint originalPoint);
@@ -30,8 +34,8 @@ public class NominatimService {
 
     /**
      * Searches with the location of a point for the nearest address
-     * @param point Location for which address should be found
-     * @param nominatimZoom Zoom level
+     * @param point Location, for which address should be found
+     * @param nominatimZoom Zoom level on which should be searched (e.g. a house or a city)
      * @param callback Message for status of geocode
      */
     public static void reverseGeocode(GeoPoint point, int nominatimZoom, GeocodingResultCallback callback){
@@ -48,8 +52,9 @@ public class NominatimService {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
+
             /**
-             * Sends a callback, when request to Nominatim failes
+             * Sends a callback, when request to Nominatim fails
              * @param call Call
              * @param e Exception
              */
@@ -60,7 +65,7 @@ public class NominatimService {
 
 
             /**
-             * When request successful provides Geopoint
+             * When request successful, provides Geopoint
              * @param call Call
              * @param response The geo response of Nominatim
              * @throws IOException Exception
@@ -71,7 +76,7 @@ public class NominatimService {
                     String body = response.body().string();
                     JSONObject json = new JSONObject(body);
 
-
+                    // get the name, latitude and longitude
                     String name = json.optString("name", "Dropped Pin");
                     double lat = json.optDouble("lat", point.getLatitude());
                     double lon = json.optDouble("lon", point.getLongitude());
