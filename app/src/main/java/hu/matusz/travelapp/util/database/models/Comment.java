@@ -1,5 +1,8 @@
 package hu.matusz.travelapp.util.database.models;
 
+/**
+ * @author matusz
+ */
 public class Comment {
     private String userId;
     private String commentId;

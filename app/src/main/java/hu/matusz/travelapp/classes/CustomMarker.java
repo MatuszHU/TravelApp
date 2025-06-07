@@ -11,7 +11,7 @@ import org.osmdroid.views.overlay.Marker;
 import hu.matusz.travelapp.R;
 
 /**
- * Custom marker
+ * Custom marker for displaying icon and setting position
  * @author mmoel
  */
 public class CustomMarker extends Marker {
