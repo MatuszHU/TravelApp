@@ -53,13 +53,6 @@ public class GoogleSignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
 
-        //out-commented for dev use without authentication
-//        if(localUser!=null){
-            Intent loggedInIntent = new Intent(GoogleSignInActivity.this, MapActivity.class);
-           // loggedInIntent.putExtra("user", localUser);
-            //sla.destroy();
-            startActivity(loggedInIntent);
-     //   }
 
         // Inicializálás MINDIG kell
         mAuth = FirebaseAuth.getInstance();
